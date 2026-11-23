@@ -45,8 +45,10 @@ Always verify current library APIs via **Context7 MCP** (and `node_modules/next/
 - **TypeScript (`strict: true`):**
   - Zero `any` and zero `@ts-ignore`.
   - All calculator functions in `src/lib/calculators/<tool>.ts` must have explicit input/output interfaces extending shared types in `src/lib/calculators/types.ts` (including `smartInsights: Insight[]`).
-- **Tailwind CSS v4 (`@tailwindcss/turbopack`):**
-  - Configure design tokens CSS-first via `@theme inline` in `src/app/globals.css` (do **not** create legacy `tailwind.config.js`).
+- **UI & Styling (`@radix-ui/themes` + Tailwind CSS v4 `@tailwindcss/turbopack`):**
+  - Use **`@radix-ui/themes`** (`Theme` provider in `src/app/layout.tsx`, `Card`, `Badge`, `Button`, `TextField`, `Table`, `Callout`, `SegmentedControl`, `Separator`, `Tooltip`, etc.) as the primary component design system so the UI looks crisp, editorial, and authentic—never generic AI-slop gradients or over-stylized cards.
+  - Pair `@radix-ui/themes` with **Tailwind CSS v4** (`@theme inline` in `src/app/globals.css`, no legacy `tailwind.config.js`) for responsive grid/flex layout, spacing, and print rules.
+  - Keep Radix `<Theme>` as the root wrapper inside `layout.tsx` (Next.js App Router preserves Server Component children inside client providers); do **not** put `"use client"` on `page.tsx` or static sections.
   - Write mobile-first classes (`base` → `sm:` → `md:` → `lg:`); maintain WCAG AA contrast in both Light (default) and Dark themes.
   - Provide `@media print` utility styles to hide nav/ads/buttons and produce clean printable financial summaries.
 - **Zod:**
