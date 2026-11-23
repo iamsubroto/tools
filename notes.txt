@@ -1,24 +1,3 @@
 agy --dangerously-skip-permissions
 
-1. EMI Calculator
-2. SIP Calculator
-3. Age Calculator
-4. Sanchayapatra Calculator
-5. DPS Calculator
-6. Loan Calculator
-7. Income Tax Calculator
-8. VAT Calculator
-9. Salary Calculator
-10. Percentage Calculator
-12. Discount Calculator
-13. BMI Calculator
-14. Unit Converter
-15. Land Measurement Calculator
-16. HTML Beautifier
-17. JavaScript Beautifier
-18. Bijoy to Unicode Converter
-19. Short URL Generator
-20. Word & Character Counter
-
-
 ctx7sk-0cce536c-6444-489f-a6f9-a8efde917174

@@ -21,6 +21,23 @@ const sanchayapatraSchemeSchema = z.object({
   tier2: sanchayapatraTierSchema,
 });
 
+const vatPresetSchema = z.object({
+  rate: z.number().min(0).max(100),
+  labelEn: z.string().min(1),
+  labelBn: z.string().min(1),
+  usageEn: z.string().min(1),
+  usageBn: z.string().min(1),
+});
+
+const loanPresetSchema = z.object({
+  id: z.enum(["home", "car", "personal"]),
+  labelEn: z.string().min(1),
+  labelBn: z.string().min(1),
+  amount: z.number().positive(),
+  annualRate: z.number().min(0).max(50),
+  tenureYears: z.number().positive().max(40),
+});
+
 export const ratesSchema = z.object({
   meta: z.object({
     schemaVersion: z.string().min(1),
@@ -41,6 +58,20 @@ export const ratesSchema = z.object({
       fiveYear: sanchayapatraSchemeSchema,
     }),
   }),
+  vatBd: z.object({
+    lastUpdated: z.string().min(1),
+    officialSource: z.string().min(1),
+    officialSourceUrl: z.string().url(),
+    standardRate: z.number().min(0).max(100),
+    presets: z.array(vatPresetSchema).min(1),
+    aitPresets: z.array(z.number().min(0).max(100)).min(1),
+  }),
+  loanPresetsBd: z.object({
+    lastUpdated: z.string().min(1),
+    officialSource: z.string().min(1),
+    officialSourceUrl: z.string().url(),
+    presets: z.array(loanPresetSchema).min(1),
+  }),
 });
 
 export type RatesConfig = z.infer<typeof ratesSchema>;
@@ -48,3 +79,5 @@ export type SanchayapatraConfig = RatesConfig["sanchayapatra"];
 export type SanchayapatraSchemeConfig = z.infer<
   typeof sanchayapatraSchemeSchema
 >;
+export type VatBdConfig = RatesConfig["vatBd"];
+export type LoanPresetsBdConfig = RatesConfig["loanPresetsBd"];

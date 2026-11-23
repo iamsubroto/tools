@@ -1,6 +1,6 @@
 {
   "meta": {
-    "schemaVersion": "1.0.0",
+    "schemaVersion": "1.1.0",
     "lastGlobalAudit": "2026-11-23"
   },
   "sanchayapatra": {
@@ -83,7 +83,7 @@
         "payoutFrequency": "maturity",
         "payoutsPerYear": 1,
         "maxSingleLimit": 3000000,
-        "eligibilityEn": "All adult Bangladeshi citizens (single limit ৳30 Lakh, joint ৳60 Lakh) and eligible institutions.",
+        "eligibilityEn": "All adult Bangladeshi citizens (single limit ৳30 Lakh, joint limit ৳60 Lakh) and eligible institutions.",
         "eligibilityBn": "সকল প্রাপ্তবয়স্ক বাংলাদেশি নাগরিক (একক ৩০ লক্ষ, যুগ্ম ৬০ লক্ষ টাকা) ও অনুমোদিত প্রতিষ্ঠান।",
         "taxRateUpToCutoff": 0.05,
         "taxRateAboveCutoff": 0.1,
@@ -97,5 +97,80 @@
         }
       }
     }
+  },
+  "vatBd": {
+    "lastUpdated": "2026-07-01",
+    "officialSource": "National Board of Revenue (NBR) Bangladesh",
+    "officialSourceUrl": "https://nbr.gov.bd",
+    "standardRate": 15,
+    "presets": [
+      {
+        "rate": 15,
+        "labelEn": "15% Standard",
+        "labelBn": "১৫% স্ট্যান্ডার্ড",
+        "usageEn": "Standard rate for most goods, services, imports, and corporate billing.",
+        "usageBn": "অধিকাংশ পণ্য, সেবা, আমদানি ও কর্পোরেট বিলের আদর্শ ভ্যাট হার।"
+      },
+      {
+        "rate": 10,
+        "labelEn": "10% Truncated",
+        "labelBn": "১০% হ্রাসকৃত",
+        "usageEn": "Selected commercial services, printing, and specified contract works.",
+        "usageBn": "নির্দিষ্ট কিছু বাণিজ্যিক সেবা ও চুক্তিভিত্তিক কাজের জন্য প্রযোজ্য।"
+      },
+      {
+        "rate": 7.5,
+        "labelEn": "7.5% Truncated",
+        "labelBn": "৭.৫% হ্রাসকৃত",
+        "usageEn": "Construction firms, procurement providers, and selected trade services.",
+        "usageBn": "নির্মাণ সংস্থা, প্রকিউরমেন্ট ও নির্বাচিত বাণিজ্যিক সেবায় প্রযোজ্য।"
+      },
+      {
+        "rate": 5,
+        "labelEn": "5% Reduced",
+        "labelBn": "৫% হ্রাসকৃত",
+        "usageEn": "Restaurants, IT/software services, trading, electricity, and gold jewelry.",
+        "usageBn": "রেস্তোরাঁ, আইটি/সফটওয়্যার সেবা, বিদ্যুৎ বিল ও স্বর্ণালংকারে প্রযোজ্য।"
+      },
+      {
+        "rate": 2,
+        "labelEn": "2% Special",
+        "labelBn": "২% বিশেষ",
+        "usageEn": "Specified petroleum, land development, or flat-registration categories.",
+        "usageBn": "বিশেষ কিছু জমি ডেভেলপমেন্ট ও ফ্ল্যাট রেজিস্ট্রেশন খাতে প্রযোজ্য।"
+      }
+    ],
+    "aitPresets": [0, 3, 5, 7, 10]
+  },
+  "loanPresetsBd": {
+    "lastUpdated": "2026-07-01",
+    "officialSource": "Bangladesh Bank Scheduled Bank Reference",
+    "officialSourceUrl": "https://www.bb.org.bd",
+    "presets": [
+      {
+        "id": "home",
+        "labelEn": "Home Loan",
+        "labelBn": "হোম লোন",
+        "amount": 5000000,
+        "annualRate": 12.0,
+        "tenureYears": 15
+      },
+      {
+        "id": "car",
+        "labelEn": "Car Loan",
+        "labelBn": "কার লোন",
+        "amount": 2000000,
+        "annualRate": 12.5,
+        "tenureYears": 5
+      },
+      {
+        "id": "personal",
+        "labelEn": "Personal Loan",
+        "labelBn": "পার্সোনাল লোন",
+        "amount": 500000,
+        "annualRate": 13.5,
+        "tenureYears": 3
+      }
+    ]
   }
 }

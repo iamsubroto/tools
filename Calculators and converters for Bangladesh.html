@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Hisab – Calculators and converters for Bangladesh</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&family=Hind+Siliguri:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f3f6f4;--surface:#fff;--ink:#10201a;--muted:#5b6b63;--line:#d6dfda;--accent:#006a4e;--accent-ink:#fff;
+  --panel:#0c4a38;--panel-ink:#f2f7f4;--panel-muted:#a9c7ba;--flag:#f42a41;--focus:#1a73e8;
+  --font:'Schibsted Grotesk','Hind Siliguri',system-ui,-apple-system,'Segoe UI',sans-serif;
+  box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0e1512;--surface:#151d19;--ink:#e6ede9;--muted:#93a29a;--line:#26332d;--accent:#4cc79b;--accent-ink:#06261b;
+  --panel:#0f3b2d;--panel-ink:#eef6f2;--panel-muted:#9fc2b3;--focus:#8ab4f8}}
+:root[data-theme="dark"]{
+  --bg:#0e1512;--surface:#151d19;--ink:#e6ede9;--muted:#93a29a;--line:#26332d;--accent:#4cc79b;--accent-ink:#06261b;
+  --panel:#0f3b2d;--panel-ink:#eef6f2;--panel-muted:#9fc2b3;--focus:#8ab4f8}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.55 var(--font);-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px;border-radius:4px}
+.wrap{max-width:1160px;margin:0 auto;padding:0 24px}
+
+header{border-bottom:1px solid var(--line)}
+.bar{display:flex;align-items:center;justify-content:space-between;height:64px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:20px;letter-spacing:-.01em}
+.brand i{width:14px;height:14px;border-radius:50%;background:var(--flag);box-shadow:0 0 0 4px var(--accent);display:block;margin-right:4px}
+.brand small{font-weight:500;color:var(--muted);font-size:15px}
+nav{display:flex;gap:28px;font-size:15px;font-weight:500;color:var(--muted)}
+nav a:hover{color:var(--ink)}
+
+.hero{padding:64px 0 56px}
+h1{font-size:clamp(34px,5vw,56px);line-height:1.05;letter-spacing:-.03em;margin:0 0 18px;font-weight:700;max-width:12em}
+.lead{font-size:18px;color:var(--muted);max-width:30em;margin:0 0 32px}
+.search{position:relative;max-width:520px}
+.search input{width:100%;height:54px;padding:0 56px 0 18px;font:inherit;font-size:17px;color:var(--ink);background:var(--surface);border:1.5px solid var(--line);border-radius:10px}
+.search input::placeholder{color:var(--muted)}
+.search input:hover{border-color:var(--muted)}
+.search kbd{position:absolute;right:14px;top:50%;transform:translateY(-50%);font:500 13px var(--font);color:var(--muted);border:1px solid var(--line);border-radius:5px;padding:1px 8px;background:var(--bg)}
+.popular{margin:16px 0 0;font-size:15px;color:var(--muted)}
+.popular a{color:var(--ink);border-bottom:1px solid var(--line);margin-left:14px}
+.popular a:first-of-type{margin-left:6px}
+.popular a:hover{border-color:var(--accent)}
+
+.panel{background:var(--panel);color:var(--panel-ink);border-radius:14px;padding:32px}
+.panel h2{margin:0 0 22px;font-size:17px;font-weight:600;display:flex;justify-content:space-between;align-items:baseline}
+.panel h2 span{font-size:14px;font-weight:400;color:var(--panel-muted)}
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:16px 20px}
+.fields label{display:block;font-size:14px;color:var(--panel-muted)}
+.fields label:first-child{grid-column:1/-1}
+.fields input{width:100%;margin-top:4px;background:transparent;border:0;border-bottom:1.5px solid color-mix(in srgb,var(--panel-ink) 35%,transparent);color:var(--panel-ink);font:600 22px var(--font);padding:4px 0 6px;border-radius:0;font-variant-numeric:tabular-nums}
+.fields input:focus{outline:none;border-color:var(--panel-ink)}
+.out{margin-top:30px;padding-top:24px;border-top:1px solid color-mix(in srgb,var(--panel-ink) 22%,transparent)}
+.out .k{font-size:14px;color:var(--panel-muted)}
+.big{font-size:clamp(38px,5vw,52px);font-weight:700;letter-spacing:-.02em;line-height:1.1;font-variant-numeric:tabular-nums}
+.big small{font-size:.45em;font-weight:500;color:var(--panel-muted);letter-spacing:0;margin-left:6px}
+.split{height:8px;border-radius:4px;background:color-mix(in srgb,var(--panel-ink) 85%,transparent);margin:22px 0 12px;overflow:hidden;display:flex}
+.split b{display:block;background:var(--flag);height:100%}
+.rows{display:flex;justify-content:space-between;gap:12px;font-size:14px;color:var(--panel-muted)}
+.rows strong{display:block;color:var(--panel-ink);font-size:17px;font-weight:600;font-variant-numeric:tabular-nums}
+.rows div:last-child{text-align:right}
+.open{display:inline-block;margin-top:22px;font-size:15px;font-weight:600;border-bottom:1.5px solid currentColor}
+
+[hidden]{display:none!important}
+.tool-page{padding-top:28px;padding-bottom:72px}
+.crumb{margin:0;font-size:15px;color:var(--muted)}
+.crumb a{color:var(--ink);border-bottom:1px solid var(--line)}
+.crumb a:hover{border-color:var(--accent)}
+.tool-page h1{margin:22px 0 10px;font-size:clamp(30px,4vw,44px);max-width:none}
+.tool-page h1 span{margin-left:14px;font-size:.5em;font-weight:400;letter-spacing:0;color:var(--muted)}
+.tool-page .lead{margin:0}
+.tgrid{display:grid;grid-template-columns:1fr 1fr;gap:28px;margin-top:32px;align-items:start}
+.inputs{display:grid;gap:18px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:28px}
+.inputs label{display:block;font-size:14px;color:var(--muted)}
+.inputs input,.inputs textarea{width:100%;height:48px;margin-top:6px;padding:0 14px;font:500 18px var(--font);color:var(--ink);background:var(--bg);border:1.5px solid var(--line);border-radius:8px;font-variant-numeric:tabular-nums}
+.inputs textarea{height:240px;padding:12px 14px;resize:vertical;font-size:16px;line-height:1.5}
+.inputs input:focus,.inputs textarea:focus{outline:none;border-color:var(--accent)}
+.panel .k{font-size:14px;color:var(--panel-muted)}
+.panel .big{margin:4px 0 22px}
+.res>div{display:flex;justify-content:space-between;gap:16px;padding:12px 0;border-top:1px solid color-mix(in srgb,var(--panel-ink) 22%,transparent);font-size:15px;color:var(--panel-muted)}
+.res strong{color:var(--panel-ink);font-weight:600;text-align:right;font-variant-numeric:tabular-nums}
+.soon{margin-top:32px;max-width:560px;padding:28px;background:var(--surface);border:1px solid var(--line);border-radius:14px;color:var(--muted)}
+.more{margin-top:64px}
+.more h2{margin:0 0 4px;font-size:20px;letter-spacing:-.02em;padding-bottom:10px;border-bottom:2px solid var(--ink)}
+@media (max-width:960px){.tgrid{grid-template-columns:1fr}}
+.index{padding:8px 0 72px}
+.index-head{display:flex;justify-content:space-between;align-items:baseline;border-bottom:2px solid var(--ink);padding-bottom:12px;margin-bottom:8px}
+.index-head h2{margin:0;font-size:24px;letter-spacing:-.02em}
+.index-head span{color:var(--muted);font-size:15px}
+.cols{display:grid;grid-template-columns:repeat(3,1fr);gap:0 40px}
+.cat h3{margin:28px 0 4px;font-size:18px;font-weight:600;display:flex;justify-content:space-between;align-items:baseline}
+.cat h3 span{font-size:14px;color:var(--muted);font-weight:400}
+.cat p{margin:0 0 6px;font-size:14px;color:var(--muted)}
+.tool{display:block;padding:13px 10px;margin:0 -10px;border-bottom:1px solid var(--line);border-radius:6px}
+.tool:hover{background:var(--surface)}
+.tool .t{display:flex;justify-content:space-between;gap:12px;align-items:baseline;font-weight:600}
+.tool .bn{font-weight:400;font-size:14px;color:var(--muted)}
+.tool .d{font-size:14px;color:var(--muted);margin-top:1px}
+.tool:hover .t{color:var(--accent)}
+.empty{display:none;padding:48px 0;color:var(--muted);font-size:17px}
+
+footer{border-top:1px solid var(--line);color:var(--muted);font-size:14px}
+footer .wrap{display:flex;justify-content:space-between;gap:16px;padding-top:24px;padding-bottom:32px;flex-wrap:wrap}
+
+@media (max-width:960px){
+  .hero{padding:40px 0 36px}
+  .cols{grid-template-columns:1fr 1fr}
+}
+@media (max-width:640px){
+  .wrap{padding:0 18px}
+  nav{display:none}
+  .cols{grid-template-columns:1fr}
+  .panel{padding:24px 20px}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap bar">
+    <a class="brand" href="#" aria-label="Hisab home"><i></i>Hisab <small>হিসাব</small></a>
+    <nav aria-label="Main">
+      <a href="#money">Money</a><a href="#everyday">Everyday</a><a href="#developer">Text and developer</a><a href="#about">About</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div id="home">
+  <section class="wrap hero">
+    <div>
+      <h1>Everyday calculations, done right.</h1>
+      <p class="lead">Loans, savings, tax and conversions built for Bangladesh. Free to use, no sign-up, and nothing is stored.</p>
+      <div class="search">
+        <input id="q" type="search" placeholder="Search 19 tools, e.g. EMI or সঞ্চয়পত্র" aria-label="Search tools" autocomplete="off">
+        <kbd aria-hidden="true">/</kbd>
+      </div>
+      <p class="popular">Popular:<a href="#emi-calculator">EMI</a><a href="#sanchayapatra-calculator">Sanchayapatra</a><a href="#income-tax-calculator">Income tax</a><a href="#age-calculator">Age</a></p>
+    </div>
+  </section>
+
+  <section class="wrap index" id="all">
+    <div class="index-head"><h2>All tools</h2><span id="count">19 tools</span></div>
+    <div class="cols" id="cols"></div>
+    <p class="empty" id="empty"></p>
+  </section>
+  </div>
+  <section class="wrap tool-page" id="tool" hidden></section>
+</main>
+
+<footer id="about">
+  <div class="wrap">
+    <span>Hisab. Results are estimates, so check with your bank or the NBR before you decide.</span>
+    <span>© 2026</span>
+  </div>
+</footer>
+
+<script>
+var CATS=[
+ {id:"money",name:"Money",note:"Loans, savings and tax"},
+ {id:"everyday",name:"Everyday",note:"Quick answers for daily life"},
+ {id:"developer",name:"Text and developer",note:"Clean up, convert and count"}
+];
+var TOOLS=[
+ ["EMI Calculator","ইএমআই","Monthly instalment on any loan","money"],
+ ["SIP Calculator","এসআইপি","Growth of a monthly investment","money"],
+ ["Sanchayapatra Calculator","সঞ্চয়পত্র","Profit and tax on savings certificates","money"],
+ ["DPS Calculator","ডিপিএস","Maturity value of a deposit scheme","money"],
+ ["Loan Calculator","লোন","Total cost and schedule of a loan","money"],
+ ["Income Tax Calculator","আয়কর","Yearly tax from your income","money"],
+ ["VAT Calculator","ভ্যাট","Add or remove VAT from a price","money"],
+ ["Salary Calculator","বেতন","Gross to net pay breakdown","money"],
+ ["Age Calculator","বয়স","Exact age in years, months and days","everyday"],
+ ["Percentage Calculator","শতকরা","Percent of, change and difference","everyday"],
+ ["Discount Calculator","ডিসকাউন্ট","Final price after a discount","everyday"],
+ ["BMI Calculator","বিএমআই","Body mass index from height and weight","everyday"],
+ ["Unit Converter","ইউনিট","Length, weight, area, volume and more","everyday"],
+ ["Land Measurement Calculator","জমি পরিমাপ","Katha, bigha, decimal and square feet","everyday"],
+ ["HTML Beautifier","","Format messy HTML so it is readable","developer"],
+ ["JavaScript Beautifier","","Indent and tidy JavaScript code","developer"],
+ ["Bijoy to Unicode Converter","বিজয় থেকে ইউনিকোড","Convert old Bijoy text to Unicode","developer"],
+ ["Short URL Generator","","Turn a long link into a short one","developer"],
+ ["Word and Character Counter","","Count words, characters and sentences","developer"]
+];
+function slug(s){return s.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")}
+function esc(s){return s.replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+var cols=document.getElementById("cols"),q=document.getElementById("q"),count=document.getElementById("count"),empty=document.getElementById("empty");
+function render(term){
+  term=(term||"").trim().toLowerCase();var html="",shown=0;
+  CATS.forEach(function(c){
+    var list=TOOLS.filter(function(t){
+      return t[3]===c.id&&(!term||(t[0]+" "+t[1]+" "+t[2]).toLowerCase().indexOf(term)>-1)});
+    if(!list.length)return;shown+=list.length;
+    html+='<div class="cat" id="'+c.id+'"><h3>'+c.name+'<span>'+list.length+'</span></h3><p>'+c.note+'</p>'+
+    list.map(toolLink).join("")+'</div>';
+  });
+  cols.innerHTML=html;
+  count.textContent=term?shown+" of "+TOOLS.length+" tools":TOOLS.length+" tools";
+  empty.style.display=shown?"none":"block";
+  empty.textContent=shown?"":"No tool matches “"+term+"”. Try a shorter name.";
+}
+q.addEventListener("input",function(){render(q.value)});
+document.addEventListener("keydown",function(e){
+  if(e.key==="/"&&document.activeElement!==q&&!/INPUT|TEXTAREA/.test(document.activeElement.tagName)){e.preventDefault();q.focus()}
+});
+render("");
+
+var fmt=new Intl.NumberFormat("en-IN",{maximumFractionDigits:0}),fmt2=new Intl.NumberFormat("en-IN",{maximumFractionDigits:2});
+var f=function(x){return fmt.format(x)},f2=function(x){return fmt2.format(x)},tk=function(x){return "৳ "+f(x)};
+function N(x){return parseFloat(String(x).replace(/,/g,""))||0}
+function P(s){var p=String(s).split("-");return new Date(+p[0],+p[1]-1,+p[2])}
+function toolLink(t){return '<a class="tool" href="#'+slug(t[0])+'"><div class="t"><span>'+esc(t[0])+'</span>'+(t[1]?'<span class="bn">'+esc(t[1])+'</span>':'')+'</div><div class="d">'+esc(t[2])+'</div></a>'}
+var now=new Date(),today=now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0")+"-"+String(now.getDate()).padStart(2,"0");
+
+/* Tool definitions: f = fields [id, label, default, type], c = calculate */
+var D={
+"emi-calculator":{f:[["p","Loan amount (৳)",1000000],["r","Interest rate (% a year)",11.5],["n","Tenure (years)",5]],c:function(v){
+  var P=N(v.p),n=Math.round(N(v.n)*12),r=N(v.r)/1200;
+  if(P<=0||n<=0)return{err:"Enter a loan amount and a tenure above zero."};
+  var m=r===0?P/n:P*r*Math.pow(1+r,n)/(Math.pow(1+r,n)-1),t=m*n;
+  return{k:"You pay every month",v:tk(m),rows:[["Loan amount",tk(P)],["Total interest",tk(t-P)],["Total payable",tk(t)]]}}},
+"sip-calculator":{f:[["m","Monthly investment (৳)",5000],["r","Expected return (% a year)",12],["n","Period (years)",10]],c:function(v){
+  var m=N(v.m),i=N(v.r)/1200,n=Math.round(N(v.n)*12);
+  if(m<=0||n<=0)return{err:"Enter a monthly amount and a period above zero."};
+  var fv=i===0?m*n:m*((Math.pow(1+i,n)-1)/i)*(1+i);
+  return{k:"Estimated value at the end",v:tk(fv),rows:[["Total invested",tk(m*n)],["Estimated returns",tk(fv-m*n)]]}}},
+"age-calculator":{f:[["b","Date of birth","2000-01-01","date"],["o","Age on",today,"date"]],c:function(v){
+  var a=P(v.b),b=P(v.o);
+  if(isNaN(a)||isNaN(b)||a>b)return{err:"Pick a birth date that is before the second date."};
+  var y=b.getFullYear()-a.getFullYear(),m=b.getMonth()-a.getMonth(),d=b.getDate()-a.getDate();
+  if(d<0){m--;d+=new Date(b.getFullYear(),b.getMonth(),0).getDate()}
+  if(m<0){y--;m+=12}
+  var nb=new Date(b.getFullYear(),a.getMonth(),a.getDate());if(nb<b)nb.setFullYear(b.getFullYear()+1);
+  return{k:"Age",v:y+" years",rows:[["Exact age",y+" years, "+m+" months, "+d+" days"],["Days lived",f(Math.round((b-a)/864e5))],["Next birthday in",Math.round((nb-b)/864e5)+" days"]]}}},
+"percentage-calculator":{f:[["a","Percentage (%)",15],["b","Of this number",2000]],c:function(v){
+  var a=N(v.a),b=N(v.b);
+  return{k:f2(a)+"% of "+f2(b),v:f2(a*b/100),rows:[[f2(a)+" is what % of "+f2(b),b?f2(a/b*100)+"%":"–"],[f2(b)+" increased by "+f2(a)+"%",f2(b*(1+a/100))],[f2(b)+" decreased by "+f2(a)+"%",f2(b*(1-a/100))]]}}},
+"discount-calculator":{f:[["p","Original price (৳)",2500],["d","Discount (%)",20]],c:function(v){
+  var p=N(v.p),d=N(v.d);
+  if(p<=0||d<0||d>100)return{err:"Enter a price above zero and a discount from 0 to 100."};
+  return{k:"You pay",v:tk(p*(1-d/100)),rows:[["You save",tk(p*d/100)],["Original price",tk(p)]]}}},
+"vat-calculator":{f:[["a","Amount (৳)",10000],["r","VAT rate (%)",15]],c:function(v){
+  var a=N(v.a),r=N(v.r);
+  if(a<=0||r<0)return{err:"Enter an amount above zero and a VAT rate."};
+  return{k:"Price with VAT added",v:tk(a*(1+r/100)),rows:[["VAT on this amount",tk(a*r/100)],["If the amount already includes VAT, VAT inside",tk(a*r/(100+r))],["Price without VAT then",tk(a*100/(100+r))]]}}},
+"bmi-calculator":{f:[["h","Height (cm)",170],["w","Weight (kg)",65]],c:function(v){
+  var h=N(v.h)/100,w=N(v.w);
+  if(h<=0||w<=0)return{err:"Enter your height and weight."};
+  var b=w/(h*h),who=b<18.5?"Underweight":b<25?"Normal":b<30?"Overweight":"Obese",as=b<18.5?"Underweight":b<23?"Normal":b<27.5?"Overweight":"High risk";
+  return{k:"Your BMI",v:b.toFixed(1),rows:[["WHO category",who],["Asian cut-offs",as]]}}},
+"word-and-character-counter":{f:[["t","Your text","","area"]],c:function(v){
+  var t=v.t,w=t.trim()?t.trim().split(/\s+/).length:0;
+  return{k:"Words",v:f(w),rows:[["Characters",f(t.length)],["Characters without spaces",f(t.replace(/\s/g,"").length)],["Sentences",f((t.match(/[^.!?।]+[.!?।]+/g)||[]).length)],["Paragraphs",f(t.split(/\n\s*\n/).filter(function(x){return x.trim()}).length)],["Reading time",Math.ceil(w/200)+" min"]]}}}
+};
+
+/* Routing: #tool-slug opens a tool page, anything else shows the listing */
+var bySlug={},home=document.getElementById("home"),page=document.getElementById("tool"),HOME=document.title;
+TOOLS.forEach(function(t){bySlug[slug(t[0])]=t});
+function showTool(id,t){
+  var d=D[id],cat=CATS.filter(function(c){return c.id===t[3]})[0];
+  document.title=t[0]+" – Hisab";
+  var h='<p class="crumb"><a href="#">All tools</a> / '+esc(cat.name)+'</p><h1>'+esc(t[0])+(t[1]?'<span>'+esc(t[1])+'</span>':'')+'</h1><p class="lead">'+esc(t[2])+'.</p>';
+  if(d){
+    h+='<div class="tgrid"><div class="inputs">'+d.f.map(function(x){
+      var a=' data-k="'+x[0]+'" id="f_'+x[0]+'"';
+      return '<label>'+esc(x[1])+(x[3]==="area"?'<textarea'+a+' placeholder="Type or paste your text here"></textarea>':'<input'+a+(x[3]==="date"?' type="date"':' inputmode="decimal"')+' value="'+x[2]+'">')+'</label>'}).join("")+'</div><div class="panel" id="res" aria-live="polite"></div></div>';
+  }else h+='<div class="soon">This tool isn’t built yet. Its inputs and results will appear here, in the same layout as the other tools.</div>';
+  var more=TOOLS.filter(function(x){return x[3]===t[3]&&x!==t});
+  h+='<div class="more"><h2>More in '+esc(cat.name)+'</h2><div class="cols">'+more.map(toolLink).join("")+'</div></div>';
+  page.innerHTML=h;
+  if(!d)return;
+  var ins=page.querySelector(".inputs"),res=document.getElementById("res");
+  function update(){
+    var v={};ins.querySelectorAll("[data-k]").forEach(function(e){v[e.dataset.k]=e.value});
+    var r=d.c(v);
+    res.innerHTML=r.err?'<div class="k">'+esc(r.err)+'</div>':'<div class="k">'+r.k+'</div><div class="big">'+r.v+'</div><div class="res">'+r.rows.map(function(x){return '<div><span>'+x[0]+'</span><strong>'+x[1]+'</strong></div>'}).join("")+'</div>';
+  }
+  ins.addEventListener("input",update);update();
+}
+function route(){
+  var h=decodeURIComponent(location.hash.slice(1)),t=bySlug[h];
+  if(!t){page.hidden=true;home.hidden=false;document.title=HOME;var el=h&&document.getElementById(h);if(el)el.scrollIntoView();else window.scrollTo(0,0);return}
+  home.hidden=true;page.hidden=false;showTool(h,t);window.scrollTo(0,0);
+}
+window.addEventListener("hashchange",route);route();
+</script>
+</body>
+</html>

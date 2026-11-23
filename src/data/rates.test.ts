@@ -24,4 +24,11 @@ describe("rates.json schema validation", () => {
       schemes.fiveYear.termYears
     );
   });
+
+  it("contains BD VAT presets and bank loan presets", () => {
+    const parsed = ratesSchema.parse(rawRates);
+    expect(parsed.vatBd.standardRate).toBe(15);
+    expect(parsed.vatBd.presets.length).toBeGreaterThanOrEqual(4);
+    expect(parsed.loanPresetsBd.presets.length).toBe(3);
+  });
 });
