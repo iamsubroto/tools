@@ -2,27 +2,15 @@
 
 import { useId, useMemo, useState } from "react";
 import {
-  Badge,
-  Button,
-  Callout,
-  Card,
-  Flex,
-  Heading,
-  Separator,
-  Switch,
-  Table,
-  Text,
-  TextField,
-} from "@radix-ui/themes";
-import {
-  AlertTriangle,
   Check,
+  ChevronDown,
   Copy,
   Info,
   Link2,
   Printer,
   RotateCcw,
   Sparkles,
+  TriangleAlert,
 } from "lucide-react";
 import type { SanchayapatraConfig } from "@/data/rates.schema";
 import {
@@ -33,766 +21,629 @@ import {
   formatBDT,
   formatBDTInWords,
   formatPercent,
+  formatSouthAsianNumber,
   toBanglaDigits,
 } from "@/lib/formatters";
-import { useLanguage } from "@/i18n/LanguageContext";
+import { useLanguage, type Locale } from "@/i18n/LanguageContext";
 
-interface SanchayapatraCalculatorClientProps {
+interface Props {
   config: SanchayapatraConfig;
 }
 
-const PRESET_AMOUNTS = [
-  { value: 100000, labelEn: "৳1 Lakh", labelBn: "১ লক্ষ" },
-  { value: 500000, labelEn: "৳5 Lakh", labelBn: "৫ লক্ষ" },
-  { value: 750000, labelEn: "৳7.5 Lakh", labelBn: "৭.৫ লক্ষ" },
-  { value: 1000000, labelEn: "৳10 Lakh", labelBn: "১০ লক্ষ" },
-  { value: 2000000, labelEn: "৳20 Lakh", labelBn: "২০ লক্ষ" },
-  { value: 3000000, labelEn: "৳30 Lakh", labelBn: "৩০ লক্ষ" },
+const DEFAULT_AMOUNT = 500000;
+const MAX_AMOUNT = 100_000_000;
+
+const PRESETS = [
+  { value: 100000, en: "1 Lakh", bn: "১ লক্ষ" },
+  { value: 500000, en: "5 Lakh", bn: "৫ লক্ষ" },
+  { value: 750000, en: "7.5 Lakh", bn: "৭.৫ লক্ষ" },
+  { value: 1000000, en: "10 Lakh", bn: "১০ লক্ষ" },
+  { value: 2000000, en: "20 Lakh", bn: "২০ লক্ষ" },
+  { value: 3000000, en: "30 Lakh", bn: "৩০ লক্ষ" },
 ];
 
-function parseAmountInput(raw: string): number {
-  const normalized = raw
+function parseAmount(raw: string): number {
+  const digits = raw
     .replace(/[০-৯]/g, (d) => String("০১২৩৪৫৬৭৮৯".indexOf(d)))
     .replace(/[^\d]/g, "");
-  if (!normalized) return 0;
-  const parsed = Number.parseInt(normalized, 10);
-  if (!Number.isFinite(parsed) || parsed < 0) return 0;
-  return Math.min(parsed, 100_000_000);
+  if (!digits) return 0;
+  const n = Number.parseInt(digits, 10);
+  if (!Number.isFinite(n) || n < 0) return 0;
+  return Math.min(n, MAX_AMOUNT);
 }
 
-export function SanchayapatraCalculatorClient({
-  config,
-}: SanchayapatraCalculatorClientProps) {
+const card =
+  "rounded-2xl border border-slate-200 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)] dark:border-slate-800 dark:bg-slate-900";
+
+const ghostBtn =
+  "inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-[13px] font-medium text-slate-700 transition-colors hover:bg-slate-50 hover:text-slate-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700";
+
+export function SanchayapatraCalculatorClient({ config }: Props) {
   const { locale } = useLanguage();
   const isBn = locale === "bn";
-  const amountInputId = useId();
-  const existingInputId = useId();
+  const t = (en: string, bn: string) => (isBn ? bn : en);
+  const fmt = (v: number) => formatBDT(v, { decimals: 0, locale });
 
-  const [amountText, setAmountText] = useState<string>("500000");
-  const [hasExisting, setHasExisting] = useState<boolean>(false);
-  const [existingText, setExistingText] = useState<string>("0");
-  const [copiedType, setCopiedType] = useState<"summary" | "link" | null>(null);
+  const amountId = useId();
+  const existingId = useId();
+  const switchLabelId = useId();
 
-  const investmentAmount = parseAmountInput(amountText);
-  const existingHoldings = hasExisting ? parseAmountInput(existingText) : 0;
+  const [amount, setAmount] = useState<number>(DEFAULT_AMOUNT);
+  const [hasExisting, setHasExisting] = useState(false);
+  const [existing, setExisting] = useState<number>(0);
+  const [copied, setCopied] = useState<"summary" | "link" | null>(null);
+
+  const existingHoldings = hasExisting ? existing : 0;
 
   const result = useMemo(
     () =>
       calculateAllSanchayapatra(
-        { investmentAmount, existingHoldings },
+        { investmentAmount: amount, existingHoldings },
         config
       ),
-    [investmentAmount, existingHoldings, config]
+    [amount, existingHoldings, config]
   );
 
-  const handleReset = () => {
-    setAmountText("500000");
-    setHasExisting(false);
-    setExistingText("0");
+  const maxMonthly = Math.max(...result.schemes.map((s) => s.netMonthly), 1);
+  const lowTax = result.cumulativeTotal <= config.taxCutoffBdt;
+
+  const flashCopied = (kind: "summary" | "link") => {
+    setCopied(kind);
+    window.setTimeout(() => setCopied(null), 2000);
   };
 
   const handleCopySummary = async () => {
     const lines = [
-      `Tools BD — Sanchayapatra Profit Summary`,
-      `Investment: ${formatBDT(result.investmentAmount)}${
-        result.existingHoldings > 0
-          ? ` (Existing: ${formatBDT(result.existingHoldings)}, Cumulative: ${formatBDT(result.cumulativeTotal)})`
-          : ""
-      }`,
-      `Profit Slab: ${result.appliedTier === "tier1" ? "Up to ৳7.5 Lakh" : "Above ৳7.5 Lakh"}`,
+      "Sanchayapatra Profit Summary — Tools BD",
+      `Investment: ${formatBDT(result.investmentAmount)}`,
+      ...(result.existingHoldings > 0
+        ? [`Existing holdings: ${formatBDT(result.existingHoldings)} (total ${formatBDT(result.cumulativeTotal)})`]
+        : []),
       "",
       ...result.schemes.map((s) => {
-        const rateStr = `${(s.annualRate * 100).toFixed(2)}%`;
-        const taxStr = `${(s.taxRate * 100).toFixed(0)}% TDS`;
+        const head = `• ${s.nameEn} — ${(s.annualRate * 100).toFixed(2)}%, ${(s.taxRate * 100).toFixed(0)}% tax`;
         if (s.payoutFrequency === "quarterly") {
-          return `• ${s.nameEn} (${rateStr}, ${taxStr}): ${formatBDT(s.netMonthly, { decimals: 0 })}/mo equivalent | ${formatBDT(s.netQuarterly, { decimals: 0 })} every 3 months`;
+          return `${head}\n   ${formatBDT(s.netQuarterly)} every 3 months (≈ ${formatBDT(s.netMonthly)}/month)`;
         }
         if (s.payoutFrequency === "maturity") {
-          return `• ${s.nameEn} (${rateStr}, ${taxStr}): ${formatBDT(s.netMonthly, { decimals: 0 })}/mo equivalent | ${formatBDT(s.totalNetProfit, { decimals: 0 })} total net profit (5 yrs)`;
+          return `${head}\n   ${formatBDT(s.totalNetProfit)} at maturity (≈ ${formatBDT(s.netMonthly)}/month)`;
         }
-        return `• ${s.nameEn} (${rateStr}, ${taxStr}): ${formatBDT(s.netMonthly, { decimals: 0 })}/month net`;
+        return `${head}\n   ${formatBDT(s.netMonthly)} per month`;
       }),
     ];
-
     try {
       await navigator.clipboard.writeText(lines.join("\n"));
-      setCopiedType("summary");
-      window.setTimeout(() => setCopiedType(null), 2200);
+      flashCopied("summary");
     } catch {
-      // Ignore clipboard failures in restricted environments
+      // Clipboard unavailable
     }
   };
 
   const handleCopyLink = async () => {
     try {
       const url = new URL(window.location.href);
-      url.searchParams.set("amount", String(investmentAmount));
-      if (existingHoldings > 0) {
-        url.searchParams.set("existing", String(existingHoldings));
-      } else {
-        url.searchParams.delete("existing");
-      }
+      url.searchParams.set("amount", String(amount));
+      if (existingHoldings > 0) url.searchParams.set("existing", String(existingHoldings));
+      else url.searchParams.delete("existing");
       await navigator.clipboard.writeText(url.toString());
-      setCopiedType("link");
-      window.setTimeout(() => setCopiedType(null), 2200);
+      flashCopied("link");
     } catch {
-      // Ignore
+      // Clipboard unavailable
     }
   };
 
-  const fmt = (val: number, decimals = 0) =>
-    formatBDT(val, { decimals, locale });
+  const handleReset = () => {
+    setAmount(DEFAULT_AMOUNT);
+    setHasExisting(false);
+    setExisting(0);
+  };
 
   return (
-    <section
-      aria-label={
-        isBn ? "সঞ্চয়পত্র মুনাফা ক্যালকুলেটর" : "Sanchayapatra Profit Calculator"
-      }
-      className="space-y-6"
-    >
-      {/* Input Card — Above the Fold */}
-      <Card size="3" className="border border-[var(--gray-5)]">
-        <div className="space-y-5">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-            <div className="w-full max-w-md space-y-2">
-              <label
-                htmlFor={amountInputId}
-                className="block text-sm font-semibold text-[var(--gray-12)]"
-              >
-                {isBn
-                  ? "আপনি কত টাকা বিনিয়োগ করতে চান? (BDT)"
-                  : "How much do you want to invest? (BDT)"}
-              </label>
+    <div className="grid gap-6 lg:grid-cols-[minmax(0,380px)_minmax(0,1fr)] lg:items-start">
+      {/* ── Input Panel ─────────────────────────────── */}
+      <aside className="lg:sticky lg:top-24">
+        <div className={`${card} p-5 sm:p-6`}>
+          <label
+            htmlFor={amountId}
+            className="text-sm font-semibold text-slate-900 dark:text-white"
+          >
+            {t("Investment amount", "বিনিয়োগের পরিমাণ")}
+          </label>
+          <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+            {t(
+              "Enter how much you want to invest",
+              "কত টাকা বিনিয়োগ করতে চান লিখুন"
+            )}
+          </p>
 
-              <TextField.Root
-                id={amountInputId}
-                size="3"
-                type="text"
-                inputMode="numeric"
-                value={amountText}
-                onChange={(e) => setAmountText(e.target.value)}
-                placeholder={isBn ? "যেমন: 500000" : "e.g. 500000"}
-                className="tabular-nums text-lg font-semibold"
-              >
-                <TextField.Slot className="font-bold text-[var(--accent-11)]">
-                  ৳
-                </TextField.Slot>
-              </TextField.Root>
-
-              <Text as="p" size="2" color="gray" className="tabular-nums">
-                {fmt(investmentAmount)} —{" "}
-                <span className="font-medium text-[var(--gray-11)]">
-                  {formatBDTInWords(investmentAmount, locale)}
-                </span>
-              </Text>
-            </div>
-
-            {/* Active Slab & Tax Status Pill */}
-            <Flex wrap="wrap" gap="2" align="center">
-              <Badge
-                size="2"
-                variant="soft"
-                color={result.appliedTier === "tier1" ? "jade" : "blue"}
-              >
-                {result.appliedTier === "tier1"
-                  ? isBn
-                    ? "স্ল্যাব ১: ≤ ৭.৫ লক্ষ"
-                    : "Slab 1: ≤ ৳7.5 Lakh"
-                  : isBn
-                    ? "স্ল্যাব ২: > ৭.৫ লক্ষ"
-                    : "Slab 2: > ৳7.5 Lakh"}
-              </Badge>
-              <Badge
-                size="2"
-                variant="soft"
-                color={
-                  result.cumulativeTotal <= config.taxCutoffBdt
-                    ? "jade"
-                    : "amber"
-                }
-              >
-                {result.cumulativeTotal <= config.taxCutoffBdt
-                  ? isBn
-                    ? "উৎস কর: ০% (পেনশনার) / ৫%"
-                    : "Tax: 0% (Pensioner) / 5%"
-                  : isBn
-                    ? "উৎস কর: ১০% (৫ লক্ষ+)"
-                    : "Tax: 10% (> ৳5 Lakh)"}
-              </Badge>
-            </Flex>
+          <div className="relative mt-3">
+            <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-xl font-semibold text-slate-400">
+              ৳
+            </span>
+            <input
+              id={amountId}
+              type="text"
+              inputMode="numeric"
+              autoComplete="off"
+              value={amount > 0 ? formatSouthAsianNumber(amount) : ""}
+              onChange={(e) => setAmount(parseAmount(e.target.value))}
+              placeholder="5,00,000"
+              className="h-14 w-full rounded-xl border border-slate-300 bg-white pl-10 pr-4 text-2xl font-bold tabular-nums tracking-tight text-slate-900 placeholder:text-slate-300 focus:border-emerald-500 focus:outline-none focus:ring-4 focus:ring-emerald-500/15 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+            />
           </div>
+          <p className="mt-2 min-h-[1.25rem] text-[13px] text-slate-500 dark:text-slate-400">
+            {amount > 0 ? formatBDTInWords(amount, locale) : t("Enter an amount", "পরিমাণ লিখুন")}
+          </p>
 
-          {/* Quick-Fill Preset Chips */}
-          <div className="space-y-1.5">
-            <Text as="p" size="1" color="gray" weight="medium">
-              {isBn ? "দ্রুত নির্বাচন করুন:" : "Quick amounts:"}
-            </Text>
-            <div className="flex flex-wrap gap-2">
-              {PRESET_AMOUNTS.map((preset) => {
-                const isActive = investmentAmount === preset.value;
-                return (
-                  <Button
-                    key={preset.value}
-                    type="button"
-                    size="2"
-                    variant={isActive ? "solid" : "soft"}
-                    color={isActive ? "jade" : "gray"}
-                    onClick={() => setAmountText(String(preset.value))}
-                    className="min-h-[40px] cursor-pointer tabular-nums"
-                  >
-                    {isBn ? preset.labelBn : preset.labelEn}
-                  </Button>
-                );
-              })}
-            </div>
-          </div>
-
-          <Separator size="4" />
-
-          {/* Optional Cumulative Existing Holdings Toggle + Action Bar */}
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="space-y-3">
-              <Flex align="center" gap="2">
-                <Switch
-                  id={existingInputId}
-                  checked={hasExisting}
-                  onCheckedChange={setHasExisting}
-                  className="cursor-pointer"
-                />
-                <label
-                  htmlFor={existingInputId}
-                  className="cursor-pointer text-sm text-[var(--gray-11)]"
+          <div className="mt-4 grid grid-cols-3 gap-2">
+            {PRESETS.map((p) => {
+              const active = amount === p.value;
+              return (
+                <button
+                  key={p.value}
+                  type="button"
+                  onClick={() => setAmount(p.value)}
+                  aria-pressed={active}
+                  className={`h-10 rounded-lg border text-[13px] font-semibold tabular-nums transition-colors ${
+                    active
+                      ? "border-emerald-600 bg-emerald-600 text-white"
+                      : "border-slate-200 bg-slate-50 text-slate-700 hover:border-slate-300 hover:bg-white dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                  }`}
                 >
-                  {isBn
-                    ? "আমার আগে থেকেই সঞ্চয়পত্র কেনা আছে (সঠিক স্ল্যাব ও করের জন্য)"
-                    : "I already hold existing Sanchayapatra (for exact ৳5L tax & ৳7.5L slab)"}
-                </label>
-              </Flex>
+                  ৳{isBn ? p.bn : p.en}
+                </button>
+              );
+            })}
+          </div>
 
-              {hasExisting && (
-                <div className="max-w-xs space-y-1">
-                  <TextField.Root
-                    size="2"
+          {/* Existing holdings */}
+          <div className="mt-5 border-t border-slate-100 pt-5 dark:border-slate-800">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p id={switchLabelId} className="text-sm font-medium text-slate-900 dark:text-white">
+                  {t("I already own Sanchayapatra", "আগে থেকেই সঞ্চয়পত্র আছে")}
+                </p>
+                <p className="mt-0.5 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+                  {t(
+                    "Tax & rate slabs use your total holdings",
+                    "কর ও মুনাফার স্ল্যাব মোট বিনিয়োগের ওপর নির্ভর করে"
+                  )}
+                </p>
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={hasExisting}
+                aria-labelledby={switchLabelId}
+                onClick={() => setHasExisting((v) => !v)}
+                className={`relative mt-0.5 inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 ${
+                  hasExisting ? "bg-emerald-600" : "bg-slate-300 dark:bg-slate-700"
+                }`}
+              >
+                <span
+                  className={`inline-block h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${
+                    hasExisting ? "translate-x-[22px]" : "translate-x-0.5"
+                  }`}
+                />
+              </button>
+            </div>
+
+            {hasExisting && (
+              <div className="mt-3">
+                <label htmlFor={existingId} className="sr-only">
+                  {t("Existing holdings amount", "পূর্বের সঞ্চয়পত্রের পরিমাণ")}
+                </label>
+                <div className="relative">
+                  <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 font-semibold text-slate-400">
+                    ৳
+                  </span>
+                  <input
+                    id={existingId}
                     type="text"
                     inputMode="numeric"
-                    value={existingText}
-                    onChange={(e) => setExistingText(e.target.value)}
-                    placeholder="e.g. 500000"
-                    aria-label={
-                      isBn
-                        ? "পূর্বের সঞ্চয়পত্রের পরিমাণ"
-                        : "Existing Sanchayapatra holdings in BDT"
-                    }
-                    className="tabular-nums"
-                  >
-                    <TextField.Slot>৳</TextField.Slot>
-                  </TextField.Root>
-                  <Text as="p" size="1" color="gray" className="tabular-nums">
-                    {isBn
-                      ? `মোট সঞ্চয়পত্র: ${fmt(result.cumulativeTotal)}`
-                      : `Cumulative total: ${fmt(result.cumulativeTotal)}`}
-                  </Text>
+                    autoComplete="off"
+                    value={existing > 0 ? formatSouthAsianNumber(existing) : ""}
+                    onChange={(e) => setExisting(parseAmount(e.target.value))}
+                    placeholder={t("Existing amount", "পূর্বের পরিমাণ")}
+                    className="h-11 w-full rounded-lg border border-slate-300 bg-white pl-8 pr-3 text-[15px] font-semibold tabular-nums text-slate-900 focus:border-emerald-500 focus:outline-none focus:ring-4 focus:ring-emerald-500/15 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+                  />
                 </div>
-              )}
-            </div>
+              </div>
+            )}
+          </div>
 
-            {/* Share / Copy / Print / Reset Actions */}
-            <Flex wrap="wrap" gap="2" className="print:hidden">
-              <Button
-                type="button"
-                variant="soft"
-                color="gray"
-                size="2"
-                onClick={handleCopySummary}
-                className="min-h-[40px] cursor-pointer"
+          {/* Applied rules */}
+          <dl className="mt-5 space-y-2.5 rounded-xl bg-slate-50 p-4 text-[13px] dark:bg-slate-800/60">
+            {hasExisting && (
+              <div className="flex items-center justify-between gap-3">
+                <dt className="text-slate-500 dark:text-slate-400">{t("Total holdings", "মোট বিনিয়োগ")}</dt>
+                <dd className="font-semibold tabular-nums text-slate-900 dark:text-white">
+                  {fmt(result.cumulativeTotal)}
+                </dd>
+              </div>
+            )}
+            <div className="flex items-center justify-between gap-3">
+              <dt className="text-slate-500 dark:text-slate-400">{t("Profit slab", "মুনাফার স্ল্যাব")}</dt>
+              <dd className="font-semibold text-slate-900 dark:text-white">
+                {result.appliedTier === "tier1"
+                  ? t("Up to ৳7.5 Lakh", "৭.৫ লক্ষ পর্যন্ত")
+                  : t("Above ৳7.5 Lakh", "৭.৫ লক্ষের বেশি")}
+              </dd>
+            </div>
+            <div className="flex items-center justify-between gap-3">
+              <dt className="text-slate-500 dark:text-slate-400">{t("Source tax", "উৎস কর")}</dt>
+              <dd
+                className={`font-semibold ${lowTax ? "text-emerald-700 dark:text-emerald-400" : "text-amber-700 dark:text-amber-400"}`}
               >
-                {copiedType === "summary" ? (
-                  <Check className="h-4 w-4" aria-hidden="true" />
-                ) : (
-                  <Copy className="h-4 w-4" aria-hidden="true" />
-                )}
-                {copiedType === "summary"
-                  ? isBn
-                    ? "কপি হয়েছে"
-                    : "Copied"
-                  : isBn
-                    ? "সারাংশ কপি"
-                    : "Copy Summary"}
-              </Button>
-              <Button
-                type="button"
-                variant="soft"
-                color="gray"
-                size="2"
-                onClick={handleCopyLink}
-                className="min-h-[40px] cursor-pointer"
-              >
-                {copiedType === "link" ? (
-                  <Check className="h-4 w-4" aria-hidden="true" />
-                ) : (
-                  <Link2 className="h-4 w-4" aria-hidden="true" />
-                )}
-                {copiedType === "link"
-                  ? isBn
-                    ? "লিংক কপি হয়েছে"
-                    : "Link Copied"
-                  : isBn
-                    ? "লিংক শেয়ার"
-                    : "Share Link"}
-              </Button>
-              <Button
-                type="button"
-                variant="soft"
-                color="gray"
-                size="2"
-                onClick={() => window.print()}
-                className="min-h-[40px] cursor-pointer"
-              >
-                <Printer className="h-4 w-4" aria-hidden="true" />
-                {isBn ? "প্রিন্ট / PDF" : "Print / PDF"}
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                color="gray"
-                size="2"
-                onClick={handleReset}
-                className="min-h-[40px] cursor-pointer"
-              >
-                <RotateCcw className="h-4 w-4" aria-hidden="true" />
-                {isBn ? "রিসেট" : "Reset"}
-              </Button>
-            </Flex>
+                {lowTax
+                  ? t("5% · Pensioner 0%", "৫% · পেনশনার ০%")
+                  : t("10% on all", "সবগুলোতে ১০%")}
+              </dd>
+            </div>
+          </dl>
+
+          {/* Actions */}
+          <div className="mt-5 grid grid-cols-2 gap-2 print:hidden">
+            <button type="button" onClick={handleCopySummary} className={ghostBtn}>
+              {copied === "summary" ? (
+                <Check className="h-4 w-4 text-emerald-600" aria-hidden="true" />
+              ) : (
+                <Copy className="h-4 w-4" aria-hidden="true" />
+              )}
+              {copied === "summary" ? t("Copied", "কপি হয়েছে") : t("Copy summary", "সারাংশ কপি")}
+            </button>
+            <button type="button" onClick={handleCopyLink} className={ghostBtn}>
+              {copied === "link" ? (
+                <Check className="h-4 w-4 text-emerald-600" aria-hidden="true" />
+              ) : (
+                <Link2 className="h-4 w-4" aria-hidden="true" />
+              )}
+              {copied === "link" ? t("Link copied", "লিংক কপি") : t("Share link", "লিংক শেয়ার")}
+            </button>
+            <button type="button" onClick={() => window.print()} className={ghostBtn}>
+              <Printer className="h-4 w-4" aria-hidden="true" />
+              {t("Print / PDF", "প্রিন্ট / PDF")}
+            </button>
+            <button type="button" onClick={handleReset} className={ghostBtn}>
+              <RotateCcw className="h-4 w-4" aria-hidden="true" />
+              {t("Reset", "রিসেট")}
+            </button>
           </div>
         </div>
-      </Card>
+      </aside>
 
-      {/* All 4 Sanchayapatra Scheme Cards Side-by-Side */}
-      <div className="space-y-3">
-        <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <Heading as="h2" size="5">
-            {isBn
-              ? `৪টি সঞ্চয়পত্রের নিট মুনাফার তুলনা (${fmt(investmentAmount)} বিনিয়োগে)`
-              : `Net Profit Across All 4 Sanchayapatra Schemes (${fmt(investmentAmount)})`}
-          </Heading>
-          <Text size="2" color="gray">
-            {isBn
-              ? "সকল অঙ্ক উৎস কর (TDS) বাদে নিট হিসাব"
-              : "All highlighted payouts are net after source tax (TDS)"}
-          </Text>
+      {/* ── Results ─────────────────────────────────── */}
+      <section aria-live="polite" className="min-w-0 space-y-6">
+        <div className="flex flex-wrap items-end justify-between gap-2">
+          <div>
+            <h2 className="text-lg font-bold tracking-tight text-slate-900 sm:text-xl dark:text-white">
+              {t("Your profit in all 4 schemes", "৪টি সঞ্চয়পত্রে আপনার মুনাফা")}
+            </h2>
+            <p className="mt-0.5 text-[13px] text-slate-500 dark:text-slate-400">
+              {t(
+                `For ${formatBDT(amount)} · all figures are net after source tax`,
+                `${formatBDT(amount, { locale: "bn" })} বিনিয়োগে · সব অঙ্ক উৎস কর বাদে নিট`
+              )}
+            </p>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          {result.schemes.map((scheme) => (
-            <SchemeResultCard
-              key={scheme.id}
-              scheme={scheme}
-              isTopMonthly={
-                investmentAmount > 0 &&
-                scheme.id === result.highestMonthlySchemeId
-              }
+        <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+          {result.schemes.map((s) => (
+            <SchemeCard
+              key={s.id}
+              scheme={s}
               locale={locale}
+              isTop={amount > 0 && s.id === result.highestMonthlySchemeId}
             />
           ))}
         </div>
-      </div>
 
-      {/* Smart Money Insights */}
-      {result.smartInsights.length > 0 && (
-        <div className="space-y-2.5">
-          {result.smartInsights.map((insight) => (
-            <Callout.Root
-              key={insight.id}
-              color={
-                insight.tone === "positive"
-                  ? "jade"
-                  : insight.tone === "warning"
-                    ? "amber"
-                    : "blue"
-              }
-              variant="soft"
-              size="2"
-            >
-              <Callout.Icon>
-                {insight.tone === "positive" ? (
-                  <Sparkles className="h-4 w-4" aria-hidden="true" />
-                ) : insight.tone === "warning" ? (
-                  <AlertTriangle className="h-4 w-4" aria-hidden="true" />
-                ) : (
-                  <Info className="h-4 w-4" aria-hidden="true" />
-                )}
-              </Callout.Icon>
-              <Callout.Text>
-                <strong className="font-semibold">
-                  {isBn ? insight.titleBn : insight.titleEn}:{" "}
-                </strong>
-                {isBn ? insight.bodyBn : insight.bodyEn}
-              </Callout.Text>
-            </Callout.Root>
-          ))}
-        </div>
-      )}
-
-      {/* Side-by-Side Quick Comparison Table */}
-      <Card size="2" className="overflow-hidden border border-[var(--gray-5)]">
-        <div className="mb-3 flex items-center justify-between gap-2">
-          <Heading as="h3" size="4">
-            {isBn
-              ? "এক নজরে ৪টি সঞ্চয়পত্রের তুলনা"
-              : "Side-by-Side Monthly & Payout Comparison"}
-          </Heading>
-        </div>
-        <div className="overflow-x-auto">
-          <Table.Root variant="surface" size="2">
-            <Table.Header>
-              <Table.Row>
-                <Table.ColumnHeaderCell>
-                  {isBn ? "সঞ্চয়পত্রের ধরন" : "Scheme"}
-                </Table.ColumnHeaderCell>
-                <Table.ColumnHeaderCell align="right">
-                  {isBn ? "মুনাফার হার" : "Rate"}
-                </Table.ColumnHeaderCell>
-                <Table.ColumnHeaderCell align="right">
-                  {isBn ? "উৎস কর" : "Tax"}
-                </Table.ColumnHeaderCell>
-                <Table.ColumnHeaderCell align="right">
-                  {isBn ? "প্রতি মাসে (নিট)" : "Per Month (Net)"}
-                </Table.ColumnHeaderCell>
-                <Table.ColumnHeaderCell align="right">
-                  {isBn ? "হাতে পাওয়ার সময় ও অঙ্ক" : "Actual Payout"}
-                </Table.ColumnHeaderCell>
-                <Table.ColumnHeaderCell align="right">
-                  {isBn ? "মেয়াদান্তে মোট নিট মুনাফা" : "Full-Term Net Profit"}
-                </Table.ColumnHeaderCell>
-              </Table.Row>
-            </Table.Header>
-            <Table.Body>
-              {result.schemes.map((s) => (
-                <Table.Row key={s.id}>
-                  <Table.RowHeaderCell className="font-medium">
-                    {isBn ? s.nameBn : s.nameEn}
-                  </Table.RowHeaderCell>
-                  <Table.Cell align="right" className="tabular-nums">
-                    {formatPercent(s.annualRate, { locale })}
-                  </Table.Cell>
-                  <Table.Cell align="right" className="tabular-nums">
-                    {formatPercent(s.taxRate, { decimals: 0, locale })}
-                  </Table.Cell>
-                  <Table.Cell
-                    align="right"
-                    className="tabular-nums font-semibold text-[var(--accent-11)]"
-                  >
-                    {fmt(s.netMonthly, 0)}
-                  </Table.Cell>
-                  <Table.Cell align="right" className="tabular-nums">
-                    {s.payoutFrequency === "monthly" && (
-                      <span>
-                        {fmt(s.netMonthly, 0)}{" "}
-                        <Text size="1" color="gray">
-                          /{isBn ? "মাস" : "mo"}
-                        </Text>
-                      </span>
-                    )}
-                    {s.payoutFrequency === "quarterly" && (
-                      <span>
-                        <strong>{fmt(s.netQuarterly, 0)}</strong>{" "}
-                        <Text size="1" color="gray">
-                          /{isBn ? "৩ মাস" : "3 mo"}
-                        </Text>
-                      </span>
-                    )}
-                    {s.payoutFrequency === "maturity" && (
-                      <span>
-                        {fmt(s.totalNetProfit, 0)}{" "}
-                        <Text size="1" color="gray">
-                          ({isBn ? "৫ বছর পর" : "at 5 yrs"})
-                        </Text>
-                      </span>
-                    )}
-                  </Table.Cell>
-                  <Table.Cell align="right" className="tabular-nums">
-                    {fmt(s.totalNetProfit, 0)}{" "}
-                    <Text size="1" color="gray">
-                      ({isBn ? `${toBanglaDigits(s.termYears)} বছর` : `${s.termYears} yrs`})
-                    </Text>
-                  </Table.Cell>
-                </Table.Row>
-              ))}
-            </Table.Body>
-          </Table.Root>
-        </div>
-      </Card>
-    </section>
-  );
-}
-
-function SchemeResultCard({
-  scheme,
-  isTopMonthly,
-  locale,
-}: {
-  scheme: SanchayapatraSchemeResult;
-  isTopMonthly: boolean;
-  locale: "en" | "bn";
-}) {
-  const isBn = locale === "bn";
-  const fmt = (val: number, decimals = 0) =>
-    formatBDT(val, { decimals, locale });
-
-  const payoutBadgeText =
-    scheme.payoutFrequency === "monthly"
-      ? isBn
-        ? "মাসিক মুনাফা"
-        : "Monthly Payout"
-      : scheme.payoutFrequency === "quarterly"
-        ? isBn
-          ? "৩-মাস পরপর মুনাফা"
-          : "Every 3 Months"
-        : isBn
-          ? "মেয়াদান্তে মুনাফা"
-          : "Paid at Maturity";
-
-  return (
-    <Card
-      size="3"
-      className={`flex flex-col justify-between border ${
-        isTopMonthly
-          ? "border-[var(--accent-8)] bg-[var(--accent-2)]/30"
-          : "border-[var(--gray-5)]"
-      }`}
-    >
-      <div className="space-y-4">
-        {/* Card Header */}
-        <div className="flex flex-wrap items-start justify-between gap-2">
-          <div className="space-y-1">
-            <Heading as="h3" size="4" className="leading-snug">
-              {isBn ? scheme.nameBn : scheme.nameEn}
-            </Heading>
-            <Flex wrap="wrap" gap="1.5" align="center">
-              <Badge size="1" variant="soft" color="gray">
-                {isBn
-                  ? `${toBanglaDigits(scheme.termYears)} বছর মেয়াদ`
-                  : `${scheme.termYears}-Year Term`}
-              </Badge>
-              <Badge
-                size="1"
-                variant="soft"
-                color={scheme.payoutFrequency === "quarterly" ? "blue" : "jade"}
-              >
-                {payoutBadgeText}
-              </Badge>
-              {isTopMonthly && (
-                <Badge size="1" variant="solid" color="jade">
-                  {isBn ? "সর্বোচ্চ মাসিক" : "Highest Monthly"}
-                </Badge>
-              )}
-              {scheme.exceedsSingleLimit && (
-                <Badge size="1" variant="soft" color="amber">
-                  {isBn
-                    ? `একক সীমা ${fmt(scheme.maxSingleLimit)} অতিক্রম`
-                    : `Over ${fmt(scheme.maxSingleLimit)} limit`}
-                </Badge>
-              )}
-            </Flex>
-          </div>
-
-          <div className="text-right tabular-nums">
-            <Text as="div" size="3" weight="bold" color="jade">
-              {formatPercent(scheme.annualRate, { locale })}
-            </Text>
-            <Text as="div" size="1" color="gray">
-              {isBn
-                ? `কর ${formatPercent(scheme.taxRate, { decimals: 0, locale })}`
-                : `${formatPercent(scheme.taxRate, { decimals: 0, locale })} Tax`}
-            </Text>
-          </div>
-        </div>
-
-        {/* Primary Payout Highlight Box */}
-        {scheme.payoutFrequency === "quarterly" ? (
-          <div className="grid grid-cols-2 gap-3 rounded-[var(--radius-3)] border border-[var(--gray-4)] bg-[var(--gray-2)] p-3.5">
-            <div>
-              <Text as="p" size="1" color="gray" weight="medium">
-                {isBn ? "প্রতি মাসে (গড় নিট)" : "Per Month (Net Avg)"}
-              </Text>
-              <Text
-                as="p"
-                size="5"
-                weight="bold"
-                className="tabular-nums text-[var(--accent-11)]"
-              >
-                {fmt(scheme.netMonthly, 0)}
-              </Text>
-              <Text as="p" size="1" color="gray" className="tabular-nums">
-                {isBn
-                  ? `কর: -${fmt(scheme.monthlyTax, 0)}/মাস`
-                  : `Tax: -${fmt(scheme.monthlyTax, 0)}/mo`}
-              </Text>
-            </div>
-            <div className="border-l border-[var(--gray-5)] pl-3">
-              <Text as="p" size="1" color="gray" weight="medium">
-                {isBn ? "প্রতি ৩ মাসে পাবেন (নিট)" : "Every 3 Months (Payout)"}
-              </Text>
-              <Text
-                as="p"
-                size="5"
-                weight="bold"
-                className="tabular-nums text-[var(--gray-12)]"
-              >
-                {fmt(scheme.netQuarterly, 0)}
-              </Text>
-              <Text as="p" size="1" color="gray" className="tabular-nums">
-                {isBn
-                  ? `মোট: ${fmt(scheme.grossQuarterly, 0)} − কর ${fmt(scheme.quarterlyTax, 0)}`
-                  : `Gross ${fmt(scheme.grossQuarterly, 0)} − Tax ${fmt(scheme.quarterlyTax, 0)}`}
-              </Text>
-            </div>
-          </div>
-        ) : scheme.payoutFrequency === "maturity" ? (
-          <div className="grid grid-cols-2 gap-3 rounded-[var(--radius-3)] border border-[var(--gray-4)] bg-[var(--gray-2)] p-3.5">
-            <div>
-              <Text as="p" size="1" color="gray" weight="medium">
-                {isBn ? "প্রতি মাসে (গড় নিট)" : "Per Month (Net Avg)"}
-              </Text>
-              <Text
-                as="p"
-                size="5"
-                weight="bold"
-                className="tabular-nums text-[var(--accent-11)]"
-              >
-                {fmt(scheme.netMonthly, 0)}
-              </Text>
-              <Text as="p" size="1" color="gray" className="tabular-nums">
-                {isBn
-                  ? `কর: -${fmt(scheme.monthlyTax, 0)}/মাস`
-                  : `Tax: -${fmt(scheme.monthlyTax, 0)}/mo`}
-              </Text>
-            </div>
-            <div className="border-l border-[var(--gray-5)] pl-3">
-              <Text as="p" size="1" color="gray" weight="medium">
-                {isBn ? "প্রতি বছর (নিট)" : "Per Year (Net)"}
-              </Text>
-              <Text
-                as="p"
-                size="5"
-                weight="bold"
-                className="tabular-nums text-[var(--gray-12)]"
-              >
-                {fmt(scheme.netAnnual, 0)}
-              </Text>
-              <Text as="p" size="1" color="gray" className="tabular-nums">
-                {isBn ? "৫ বছর শেষে একত্রে" : "Paid at 5-yr maturity"}
-              </Text>
-            </div>
-          </div>
-        ) : (
-          <div className="rounded-[var(--radius-3)] border border-[var(--gray-4)] bg-[var(--gray-2)] p-3.5">
-            <Text as="p" size="1" color="gray" weight="medium">
-              {isBn
-                ? "প্রতি মাসে হাতে পাবেন (উৎস কর বাদে নিট)"
-                : "Net Monthly Payout (After Source Tax)"}
-            </Text>
-            <div className="mt-0.5 flex flex-wrap items-baseline justify-between gap-2">
-              <Text
-                as="p"
-                size="6"
-                weight="bold"
-                className="tabular-nums text-[var(--accent-11)]"
-              >
-                {fmt(scheme.netMonthly, 0)}
-                <Text size="2" weight="regular" color="gray">
-                  /{isBn ? "মাস" : "mo"}
-                </Text>
-              </Text>
-              <Text as="p" size="1" color="gray" className="tabular-nums">
-                {isBn
-                  ? `মোট ${fmt(scheme.grossMonthly, 0)} − কর ${fmt(scheme.monthlyTax, 0)}`
-                  : `Gross ${fmt(scheme.grossMonthly, 0)} − Tax ${fmt(scheme.monthlyTax, 0)}`}
-              </Text>
-            </div>
+        {/* Insights */}
+        {result.smartInsights.length > 0 && (
+          <div className="space-y-3">
+            {result.smartInsights.map((ins) => {
+              const tone =
+                ins.tone === "positive"
+                  ? {
+                      wrap: "border-emerald-200 bg-emerald-50/70 dark:border-emerald-500/20 dark:bg-emerald-500/5",
+                      icon: "text-emerald-600 dark:text-emerald-400",
+                      Icon: Sparkles,
+                    }
+                  : ins.tone === "warning"
+                    ? {
+                        wrap: "border-amber-200 bg-amber-50/70 dark:border-amber-500/20 dark:bg-amber-500/5",
+                        icon: "text-amber-600 dark:text-amber-400",
+                        Icon: TriangleAlert,
+                      }
+                    : {
+                        wrap: "border-sky-200 bg-sky-50/70 dark:border-sky-500/20 dark:bg-sky-500/5",
+                        icon: "text-sky-600 dark:text-sky-400",
+                        Icon: Info,
+                      };
+              return (
+                <div key={ins.id} className={`flex gap-3 rounded-xl border p-4 ${tone.wrap}`}>
+                  <tone.Icon className={`mt-0.5 h-[18px] w-[18px] shrink-0 ${tone.icon}`} aria-hidden="true" />
+                  <div className="text-[13px] leading-relaxed text-slate-700 dark:text-slate-300">
+                    <p className="font-semibold text-slate-900 dark:text-white">
+                      {isBn ? ins.titleBn : ins.titleEn}
+                    </p>
+                    <p className="mt-0.5">{isBn ? ins.bodyBn : ins.bodyEn}</p>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
 
-        {/* Secondary Metrics Grid */}
-        <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs sm:text-sm">
-          <div>
-            <dt className="text-[var(--gray-10)]">
-              {isBn ? "বার্ষিক নিট মুনাফা" : "Annual Net Profit"}
-            </dt>
-            <dd className="tabular-nums font-semibold text-[var(--gray-12)]">
-              {fmt(scheme.netAnnual, 0)}
-            </dd>
+        {/* Comparison */}
+        <div className={`${card} overflow-hidden`}>
+          <div className="border-b border-slate-100 px-5 py-4 dark:border-slate-800">
+            <h3 className="text-[15px] font-semibold text-slate-900 dark:text-white">
+              {t("Monthly income comparison", "মাসিক আয়ের তুলনা")}
+            </h3>
+            <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+              {t("Net per-month equivalent, highest to lowest", "নিট মাসিক সমতুল্য, বেশি থেকে কম")}
+            </p>
           </div>
-          <div>
-            <dt className="text-[var(--gray-10)]">
-              {isBn
-                ? `${toBanglaDigits(scheme.termYears)} বছরে মোট নিট মুনাফা`
-                : `Total ${scheme.termYears}-Yr Net Profit`}
-            </dt>
-            <dd className="tabular-nums font-semibold text-[var(--gray-12)]">
-              {fmt(scheme.totalNetProfit, 0)}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-[var(--gray-10)]">
-              {isBn ? "মোট উৎস কর কাটা" : "Total Tax Deducted"}
-            </dt>
-            <dd className="tabular-nums font-medium text-[var(--gray-11)]">
-              {fmt(scheme.totalTax, 0)}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-[var(--gray-10)]">
-              {isBn ? "আসল + মোট নিট মুনাফা" : "Principal + Net Profit"}
-            </dt>
-            <dd className="tabular-nums font-semibold text-[var(--gray-12)]">
-              {fmt(scheme.maturityTotalValue, 0)}
-            </dd>
-          </div>
-        </dl>
+          <ul className="divide-y divide-slate-100 dark:divide-slate-800">
+            {[...result.schemes]
+              .sort((a, b) => b.netMonthly - a.netMonthly)
+              .map((s) => (
+                <li key={s.id} className="px-5 py-3.5">
+                  <div className="flex items-center justify-between gap-3 text-[13px]">
+                    <span className="truncate font-medium text-slate-700 dark:text-slate-200">
+                      {isBn ? s.nameBn : s.nameEn}
+                    </span>
+                    <span className="shrink-0 font-bold tabular-nums text-slate-900 dark:text-white">
+                      {fmt(s.netMonthly)}
+                      <span className="font-normal text-slate-400">/{t("mo", "মাস")}</span>
+                    </span>
+                  </div>
+                  <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+                    <div
+                      className="h-full rounded-full bg-emerald-500 transition-[width] duration-300"
+                      style={{ width: `${Math.max(2, (s.netMonthly / maxMonthly) * 100)}%` }}
+                    />
+                  </div>
+                </li>
+              ))}
+          </ul>
+        </div>
 
-        {/* Eligibility Note */}
-        <Text as="p" size="1" color="gray" className="leading-relaxed">
-          <strong className="text-[var(--gray-11)]">
-            {isBn ? "যোগ্যতা: " : "Eligibility: "}
-          </strong>
-          {isBn ? scheme.eligibilityBn : scheme.eligibilityEn}
-        </Text>
-
-        {/* Zero-JS Native Details: Year-Wise Premature Encashment Rates */}
-        <details className="group rounded-[var(--radius-2)] border border-[var(--gray-4)] bg-[var(--color-background)] px-3 py-2 text-xs">
-          <summary className="cursor-pointer font-medium text-[var(--gray-11)] select-none hover:text-[var(--accent-11)]">
-            {isBn
-              ? "মেয়াদপূর্তির আগে ভাঙালে বছরভিত্তিক মুনাফার হার"
-              : "Early encashment rates (Year-wise breakdown)"}
-          </summary>
-          <div className="mt-2 space-y-1 border-t border-[var(--gray-4)] pt-2 tabular-nums">
-            {scheme.yearWiseSchedule.map((row) => (
-              <div
-                key={row.year}
-                className="flex items-center justify-between text-[var(--gray-11)]"
-              >
-                <span>
-                  {isBn
-                    ? `${toBanglaDigits(row.year)}ম বছর শেষে`
-                    : `End of Year ${row.year}`}
-                  {row.year === scheme.termYears
-                    ? isBn
-                      ? " (মেয়াদপূর্তি)"
-                      : " (Maturity)"
-                    : ""}
-                </span>
-                <span>
-                  <strong>{formatPercent(row.annualRate, { locale })}</strong>{" "}
-                  <span className="text-[var(--gray-10)]">
-                    ({fmt(row.netMonthlyEquivalent, 0)}/{isBn ? "মাস" : "mo"})
-                  </span>
-                </span>
-              </div>
-            ))}
+        {/* Detailed table */}
+        <div className={`${card} overflow-hidden`}>
+          <div className="border-b border-slate-100 px-5 py-4 dark:border-slate-800">
+            <h3 className="text-[15px] font-semibold text-slate-900 dark:text-white">
+              {t("Full breakdown", "বিস্তারিত হিসাব")}
+            </h3>
           </div>
-        </details>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[640px] text-left text-[13px]">
+              <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500 dark:bg-slate-800/50 dark:text-slate-400">
+                <tr>
+                  <th scope="col" className="px-5 py-3 font-semibold">{t("Scheme", "সঞ্চয়পত্র")}</th>
+                  <th scope="col" className="px-3 py-3 text-right font-semibold">{t("Rate", "হার")}</th>
+                  <th scope="col" className="px-3 py-3 text-right font-semibold">{t("Tax", "কর")}</th>
+                  <th scope="col" className="px-3 py-3 text-right font-semibold">{t("Per month", "প্রতি মাস")}</th>
+                  <th scope="col" className="px-3 py-3 text-right font-semibold">{t("You receive", "হাতে পাবেন")}</th>
+                  <th scope="col" className="px-5 py-3 text-right font-semibold">{t("Total profit", "মোট মুনাফা")}</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                {result.schemes.map((s) => (
+                  <tr key={s.id} className="text-slate-700 dark:text-slate-300">
+                    <th scope="row" className="px-5 py-3.5 font-medium text-slate-900 dark:text-white">
+                      {isBn ? s.nameBn : s.nameEn}
+                    </th>
+                    <td className="px-3 py-3.5 text-right tabular-nums">
+                      {formatPercent(s.annualRate, { locale })}
+                    </td>
+                    <td className="px-3 py-3.5 text-right tabular-nums">
+                      {formatPercent(s.taxRate, { decimals: 0, locale })}
+                    </td>
+                    <td className="px-3 py-3.5 text-right font-semibold tabular-nums text-slate-900 dark:text-white">
+                      {fmt(s.netMonthly)}
+                    </td>
+                    <td className="px-3 py-3.5 text-right tabular-nums">
+                      {s.payoutFrequency === "monthly" && (
+                        <>{fmt(s.netMonthly)} <span className="text-slate-400">/{t("month", "মাস")}</span></>
+                      )}
+                      {s.payoutFrequency === "quarterly" && (
+                        <>{fmt(s.netQuarterly)} <span className="text-slate-400">/{t("3 months", "৩ মাস")}</span></>
+                      )}
+                      {s.payoutFrequency === "maturity" && (
+                        <>{fmt(s.totalNetProfit)} <span className="text-slate-400">{t("at maturity", "মেয়াদান্তে")}</span></>
+                      )}
+                    </td>
+                    <td className="px-5 py-3.5 text-right tabular-nums">
+                      {fmt(s.totalNetProfit)}{" "}
+                      <span className="text-slate-400">
+                        ({isBn ? `${toBanglaDigits(s.termYears)} বছর` : `${s.termYears} yrs`})
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function SchemeCard({
+  scheme,
+  locale,
+  isTop,
+}: {
+  scheme: SanchayapatraSchemeResult;
+  locale: Locale;
+  isTop: boolean;
+}) {
+  const isBn = locale === "bn";
+  const t = (en: string, bn: string) => (isBn ? bn : en);
+  const fmt = (v: number) => formatBDT(v, { decimals: 0, locale });
+  const years = isBn ? toBanglaDigits(scheme.termYears) : String(scheme.termYears);
+
+  const frequency =
+    scheme.payoutFrequency === "monthly"
+      ? t("Monthly payout", "মাসিক মুনাফা")
+      : scheme.payoutFrequency === "quarterly"
+        ? t("Paid every 3 months", "৩ মাস অন্তর মুনাফা")
+        : t("Paid at maturity", "মেয়াদান্তে মুনাফা");
+
+  return (
+    <article
+      className={`relative flex flex-col rounded-2xl border bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] dark:bg-slate-900 ${
+        isTop
+          ? "border-emerald-500 ring-4 ring-emerald-500/10 dark:border-emerald-500/70"
+          : "border-slate-200 dark:border-slate-800"
+      }`}
+    >
+      {isTop && (
+        <span className="absolute -top-2.5 left-5 rounded-full bg-emerald-600 px-2.5 py-0.5 text-[11px] font-semibold text-white shadow-sm">
+          {t("Highest monthly income", "সর্বোচ্চ মাসিক আয়")}
+        </span>
+      )}
+
+      <header className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h3 className="text-[15px] font-semibold leading-snug text-slate-900 dark:text-white">
+            {isBn ? scheme.nameBn : scheme.nameEn}
+          </h3>
+          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+            {t(`${years}-year term`, `${years} বছর মেয়াদ`)} · {frequency}
+          </p>
+        </div>
+        <div className="shrink-0 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-right dark:border-slate-700 dark:bg-slate-800">
+          <div className="text-sm font-bold tabular-nums text-slate-900 dark:text-white">
+            {formatPercent(scheme.annualRate, { locale })}
+          </div>
+          <div className="text-[10px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+            {formatPercent(scheme.taxRate, { decimals: 0, locale })} {t("tax", "কর")}
+          </div>
+        </div>
+      </header>
+
+      <div className="mt-5">
+        <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
+          {scheme.payoutFrequency === "monthly"
+            ? t("You receive every month", "প্রতি মাসে পাবেন")
+            : t("Equivalent per month", "মাসিক সমতুল্য")}
+        </p>
+        <p className="mt-1 text-[2rem] font-bold leading-none tracking-tight tabular-nums text-slate-900 dark:text-white">
+          {fmt(scheme.netMonthly)}
+        </p>
+        <p className="mt-2 text-xs tabular-nums text-slate-500 dark:text-slate-400">
+          {t("Gross", "মোট")} {fmt(scheme.grossMonthly)} − {t("tax", "কর")} {fmt(scheme.monthlyTax)}
+        </p>
       </div>
-    </Card>
+
+      {scheme.payoutFrequency === "quarterly" && (
+        <div className="mt-4 flex items-center justify-between gap-3 rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 dark:border-sky-500/20 dark:bg-sky-500/10">
+          <div>
+            <p className="text-[13px] font-semibold text-sky-900 dark:text-sky-200">
+              {t("You receive every 3 months", "প্রতি ৩ মাসে পাবেন")}
+            </p>
+            <p className="text-[11px] text-sky-700 dark:text-sky-300/80">
+              {t("4 payments a year to your bank", "বছরে ৪ বার ব্যাংকে জমা")}
+            </p>
+          </div>
+          <p className="text-xl font-bold tabular-nums text-sky-900 dark:text-sky-100">
+            {fmt(scheme.netQuarterly)}
+          </p>
+        </div>
+      )}
+
+      {scheme.payoutFrequency === "maturity" && (
+        <div className="mt-4 flex items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 dark:border-amber-500/20 dark:bg-amber-500/10">
+          <div>
+            <p className="text-[13px] font-semibold text-amber-900 dark:text-amber-200">
+              {t(`Paid once after ${years} years`, `${years} বছর শেষে একসাথে`)}
+            </p>
+            <p className="text-[11px] text-amber-700 dark:text-amber-300/80">
+              {t("No monthly payout for this scheme", "এই সঞ্চয়পত্রে মাসিক মুনাফা নেই")}
+            </p>
+          </div>
+          <p className="text-xl font-bold tabular-nums text-amber-900 dark:text-amber-100">
+            {fmt(scheme.totalNetProfit)}
+          </p>
+        </div>
+      )}
+
+      <dl className="mt-5 grid grid-cols-2 gap-x-4 gap-y-3 border-t border-slate-100 pt-4 text-xs dark:border-slate-800">
+        <div>
+          <dt className="text-slate-500 dark:text-slate-400">{t("Per year", "প্রতি বছর")}</dt>
+          <dd className="mt-0.5 text-[13px] font-semibold tabular-nums text-slate-900 dark:text-white">
+            {fmt(scheme.netAnnual)}
+          </dd>
+        </div>
+        <div>
+          <dt className="text-slate-500 dark:text-slate-400">
+            {t(`Total profit (${years} yrs)`, `মোট মুনাফা (${years} বছর)`)}
+          </dt>
+          <dd className="mt-0.5 text-[13px] font-semibold tabular-nums text-slate-900 dark:text-white">
+            {fmt(scheme.totalNetProfit)}
+          </dd>
+        </div>
+        <div>
+          <dt className="text-slate-500 dark:text-slate-400">{t("Total tax", "মোট কর")}</dt>
+          <dd className="mt-0.5 text-[13px] font-semibold tabular-nums text-slate-700 dark:text-slate-300">
+            {fmt(scheme.totalTax)}
+          </dd>
+        </div>
+        <div>
+          <dt className="text-slate-500 dark:text-slate-400">{t("Principal + profit", "আসল + মুনাফা")}</dt>
+          <dd className="mt-0.5 text-[13px] font-semibold tabular-nums text-slate-900 dark:text-white">
+            {fmt(scheme.maturityTotalValue)}
+          </dd>
+        </div>
+      </dl>
+
+      {scheme.exceedsSingleLimit && (
+        <p className="mt-4 flex items-start gap-2 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:bg-amber-500/10 dark:text-amber-300">
+          <TriangleAlert className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+          {t(
+            `Exceeds single-name limit of ${fmt(scheme.maxSingleLimit)}`,
+            `একক নামের সীমা ${fmt(scheme.maxSingleLimit)} অতিক্রম করেছে`
+          )}
+        </p>
+      )}
+
+      <details className="group mt-4 rounded-xl border border-slate-200 dark:border-slate-800">
+        <summary className="flex cursor-pointer items-center justify-between gap-2 px-3.5 py-2.5 text-xs font-medium text-slate-600 select-none hover:text-slate-900 dark:text-slate-400 dark:hover:text-white">
+          {t("Eligibility & early encashment rates", "যোগ্যতা ও আগে ভাঙানোর হার")}
+          <ChevronDown className="h-4 w-4 transition-transform group-open:rotate-180" aria-hidden="true" />
+        </summary>
+        <div className="space-y-3 border-t border-slate-200 px-3.5 py-3 text-xs dark:border-slate-800">
+          <p className="leading-relaxed text-slate-600 dark:text-slate-400">
+            <span className="font-semibold text-slate-900 dark:text-white">{t("Who can buy: ", "কারা কিনতে পারবেন: ")}</span>
+            {isBn ? scheme.eligibilityBn : scheme.eligibilityEn}
+          </p>
+          <table className="w-full tabular-nums">
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+              {scheme.yearWiseSchedule.map((row) => (
+                <tr key={row.year} className="text-slate-600 dark:text-slate-400">
+                  <td className="py-1.5">
+                    {t(`After year ${row.year}`, `${toBanglaDigits(row.year)} বছর পর`)}
+                    {row.year === scheme.termYears && (
+                      <span className="ml-1 text-emerald-600">{t("(maturity)", "(মেয়াদপূর্তি)")}</span>
+                    )}
+                  </td>
+                  <td className="py-1.5 text-right font-semibold text-slate-900 dark:text-white">
+                    {formatPercent(row.annualRate, { locale })}
+                  </td>
+                  <td className="py-1.5 pl-3 text-right">
+                    {fmt(row.netMonthlyEquivalent)}/{t("mo", "মাস")}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </details>
+    </article>
   );
 }

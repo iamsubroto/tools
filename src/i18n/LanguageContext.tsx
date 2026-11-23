@@ -12,13 +12,11 @@ export type Locale = "en" | "bn";
 interface LanguageContextValue {
   locale: Locale;
   setLocale: (locale: Locale) => void;
-  toggleLocale: () => void;
 }
 
 const LanguageContext = createContext<LanguageContextValue>({
   locale: "en",
   setLocale: () => {},
-  toggleLocale: () => {},
 });
 
 const STORAGE_KEY = "toolsbd_locale";
@@ -35,8 +33,7 @@ function subscribeLocale(callback: () => void): () => void {
 
 function getLocaleSnapshot(): Locale {
   try {
-    const saved = window.localStorage.getItem(STORAGE_KEY);
-    return saved === "bn" ? "bn" : "en";
+    return window.localStorage.getItem(STORAGE_KEY) === "bn" ? "bn" : "en";
   } catch {
     return "en";
   }
@@ -62,12 +59,8 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const toggleLocale = () => {
-    setLocale(locale === "en" ? "bn" : "en");
-  };
-
   return (
-    <LanguageContext.Provider value={{ locale, setLocale, toggleLocale }}>
+    <LanguageContext.Provider value={{ locale, setLocale }}>
       {children}
     </LanguageContext.Provider>
   );
