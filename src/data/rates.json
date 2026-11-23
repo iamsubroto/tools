@@ -172,5 +172,14 @@
         "tenureYears": 3
       }
     ]
+  },
+  "govtJobAgeLimit": {
+    "lastUpdated": "2026-01-01",
+    "officialSource": "Government Service Maximum Age Limit Act (Bangladesh)",
+    "officialSourceUrl": "https://mopa.gov.bd",
+    "minYears": 18,
+    "generalMaxYears": 32,
+    "bcsMinYears": 21,
+    "bcsMaxYears": 32
   }
 }

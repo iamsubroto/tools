@@ -72,6 +72,15 @@ export const ratesSchema = z.object({
     officialSourceUrl: z.string().url(),
     presets: z.array(loanPresetSchema).min(1),
   }),
+  govtJobAgeLimit: z.object({
+    lastUpdated: z.string().min(1),
+    officialSource: z.string().min(1),
+    officialSourceUrl: z.string().url(),
+    minYears: z.number().int().positive(),
+    generalMaxYears: z.number().int().positive(),
+    bcsMinYears: z.number().int().positive(),
+    bcsMaxYears: z.number().int().positive(),
+  }),
 });
 
 export type RatesConfig = z.infer<typeof ratesSchema>;
@@ -81,3 +90,4 @@ export type SanchayapatraSchemeConfig = z.infer<
 >;
 export type VatBdConfig = RatesConfig["vatBd"];
 export type LoanPresetsBdConfig = RatesConfig["loanPresetsBd"];
+export type GovtJobAgeLimitConfig = RatesConfig["govtJobAgeLimit"];
