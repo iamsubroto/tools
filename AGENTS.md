@@ -7,7 +7,7 @@
 - Keep `layout.tsx`, every `page.tsx`, SEO guides, rate tables, `<details>` FAQs, `JsonLd`, `AdSlot`, `ToolCard`, `Header`, and `Footer` as **Server Components**.
 - Isolate `"use client"` to minimal interactive leaves (`*CalculatorClient`, `ToolDirectory`, `ThemeToggle`, `LanguageToggle`). Pass serializable props from Server Components.
 - Respect `cacheComponents: true` & `partialPrefetching: true` (`next.config.ts`): keep all routes `○ Static` (no `new Date()`, `cookies()`, or `headers()` in static Server Components).
-- Use `LayoutProps`/`PageProps`, `Metadata`, `next/font/google` (`Plus Jakarta Sans` + `Hind Siliguri`), `next/image`, and `next/script` (`afterInteractive`/`lazyOnload`).
+- Use `LayoutProps`/`PageProps`, `Metadata`, `next/font/google` (`Raleway` + `Tiro Bangla`), `next/image`, and `next/script` (`afterInteractive`/`lazyOnload`).
 - 100% browser-side, zero-backend privacy (HTML5 Canvas for image tools, `@media print` for PDF).
 
 ## 2. Stack & UI Conventions

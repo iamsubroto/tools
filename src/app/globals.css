@@ -3,9 +3,9 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme inline {
-  --font-sans: var(--font-jakarta), var(--font-hind-siliguri), ui-sans-serif,
+  --font-sans: var(--font-raleway), var(--font-tiro-bangla), ui-sans-serif,
     system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-bangla: var(--font-hind-siliguri), var(--font-jakarta), sans-serif;
+  --font-bangla: var(--font-tiro-bangla), var(--font-raleway), serif;
 }
 
 @theme {
@@ -25,6 +25,7 @@
 
   body {
     @apply bg-slate-50 font-sans text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-100;
+    font-variant-numeric: lining-nums;
   }
 
   ::selection {

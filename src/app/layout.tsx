@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Plus_Jakarta_Sans, Hind_Siliguri } from "next/font/google";
+import { Raleway, Tiro_Bangla } from "next/font/google";
 import "./globals.css";
 import { siteConfig } from "@/config/site";
 import { LanguageProvider } from "@/i18n/LanguageContext";
@@ -7,17 +7,16 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { themeInitScript } from "@/components/layout/ThemeToggle";
 
-const plusJakartaSans = Plus_Jakarta_Sans({
+const raleway = Raleway({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
-  variable: "--font-jakarta",
+  variable: "--font-raleway",
   display: "swap",
 });
 
-const hindSiliguri = Hind_Siliguri({
-  subsets: ["bengali", "latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-hind-siliguri",
+const tiroBangla = Tiro_Bangla({
+  subsets: ["bengali"],
+  weight: "400",
+  variable: "--font-tiro-bangla",
   display: "swap",
 });
 
@@ -51,7 +50,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${plusJakartaSans.variable} ${hindSiliguri.variable} h-full`}
+      className={`${raleway.variable} ${tiroBangla.variable} h-full`}
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />

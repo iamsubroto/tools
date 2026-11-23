@@ -142,12 +142,6 @@ export default function SanchayapatraCalculatorPage() {
             </div>
           </div>
 
-          <p className="mt-4 max-w-3xl text-[15px] leading-relaxed text-slate-600 dark:text-slate-400">
-            Enter one amount and see exactly how much you will receive — per month,
-            every 3 months, or at maturity — after source tax, in all 4 Bangladesh
-            savings certificates.
-          </p>
-
           <div className="mt-5 flex flex-wrap items-center gap-2 text-xs">
             <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 font-medium text-emerald-800 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300">
               <BadgeCheck className="h-3.5 w-3.5" aria-hidden="true" />
