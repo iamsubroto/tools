@@ -31,12 +31,17 @@ export function ToolDirectory({ tools }: ToolDirectoryProps) {
     tool.keywords.some((k) => k.toLowerCase().includes(q));
 
   const searched = tools.filter(matchesQuery);
-  const visible = searched
-    .filter((t) => category === "all" || t.category === category)
-    .sort((a, b) => Number(b.status === "live") - Number(a.status === "live"));
+  const filtered = searched.filter(
+    (t) => category === "all" || t.category === category
+  );
+
+  const liveTools = filtered.filter((t) => t.status === "live");
+  const plannedTools = filtered.filter((t) => t.status === "planned");
 
   const countFor = (c: ToolCategory | "all") =>
-    c === "all" ? searched.length : searched.filter((t) => t.category === c).length;
+    c === "all"
+      ? searched.length
+      : searched.filter((t) => t.category === c).length;
 
   const chipBase =
     "inline-flex min-h-[38px] shrink-0 items-center gap-2 rounded-full border px-3.5 text-[13px] font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600";
@@ -59,8 +64,8 @@ export function ToolDirectory({ tools }: ToolDirectoryProps) {
           onChange={(e) => setQuery(e.target.value)}
           placeholder={
             isBn
-              ? "টুল খুঁজুন… যেমন: সঞ্চয়পত্র, বিদ্যুৎ বিল, জমি"
-              : "Search tools… e.g. sanchayapatra, biddut bill, jomi"
+              ? "টুল খুঁজুন… যেমন: সঞ্চয়পত্র, ইএমআই, ভ্যাট, বয়স, বিএমআই"
+              : "Search tools… e.g. sanchayapatra, emi, vat, age, bmi"
           }
           aria-label={isBn ? "টুল খুঁজুন" : "Search tools"}
           className="h-13 w-full rounded-2xl border border-slate-200 bg-white pl-12 pr-12 text-[15px] text-slate-900 shadow-[0_1px_2px_rgba(15,23,42,0.04)] placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-4 focus:ring-emerald-500/15 dark:border-slate-800 dark:bg-slate-900 dark:text-white"
@@ -109,16 +114,50 @@ export function ToolDirectory({ tools }: ToolDirectoryProps) {
         ))}
       </div>
 
-      {/* Grid */}
-      {visible.length > 0 ? (
-        <ul className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {visible.map((tool) => (
-            <li key={tool.slug}>
-              <ToolCard tool={tool} locale={locale} />
-            </li>
-          ))}
-        </ul>
-      ) : (
+      {/* Live Tools Section (Always First & Clearly Separated) */}
+      {liveTools.length > 0 && (
+        <div className="mt-8">
+          <div className="mb-4 flex items-center justify-between gap-2">
+            <h3 className="flex items-center gap-2 text-base font-bold tracking-tight text-slate-900 dark:text-white">
+              <span className="h-2 w-2 rounded-full bg-emerald-500" />
+              {isBn ? "চালু টুলস" : "Live tools"}
+              <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold tabular-nums text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
+                {liveTools.length}
+              </span>
+            </h3>
+          </div>
+          <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {liveTools.map((tool) => (
+              <li key={tool.slug}>
+                <ToolCard tool={tool} locale={locale} />
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Coming Soon Section */}
+      {plannedTools.length > 0 && (
+        <div className="mt-12">
+          <div className="mb-4 flex items-center justify-between gap-2">
+            <h3 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              {isBn ? "শীঘ্রই আসছে" : "Coming soon"}
+              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium tabular-nums text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+                {plannedTools.length}
+              </span>
+            </h3>
+          </div>
+          <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {plannedTools.map((tool) => (
+              <li key={tool.slug}>
+                <ToolCard tool={tool} locale={locale} />
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {liveTools.length === 0 && plannedTools.length === 0 && (
         <div className="mt-6 rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-14 text-center dark:border-slate-700 dark:bg-slate-900">
           <p className="font-medium text-slate-900 dark:text-white">
             {isBn ? "কোনো টুল পাওয়া যায়নি" : "No tools match your search"}
