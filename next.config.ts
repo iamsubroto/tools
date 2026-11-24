@@ -5,6 +5,26 @@ const nextConfig: NextConfig = {
   agentRules: false,
   cacheComponents: true,
   partialPrefetching: true,
+  async redirects() {
+    const fromHost = process.env.REDIRECT_FROM_HOST?.trim();
+    const targetOrigin = process.env.NEXT_PUBLIC_SITE_URL?.trim()?.replace(
+      /\/+$/,
+      ""
+    );
+
+    if (!fromHost || !targetOrigin) {
+      return [];
+    }
+
+    return [
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: fromHost }],
+        destination: `${targetOrigin}/:path*`,
+        permanent: true,
+      },
+    ];
+  },
   turbopack: {
     rules: {
       "*.css": {

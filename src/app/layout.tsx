@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Raleway, Tiro_Bangla } from "next/font/google";
 import "./globals.css";
-import { siteConfig } from "@/config/site";
+import { isPreviewDeployment, siteConfig } from "@/config/site";
 import { LanguageProvider } from "@/i18n/LanguageContext";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
@@ -28,6 +28,12 @@ export const metadata: Metadata = {
   },
   description:
     "Free, accurate calculators for Bangladesh and NRBs: Sanchayapatra, income tax, loan EMI, electricity bill, land, gold and more. No signup, works in Bangla & English.",
+  robots: isPreviewDeployment
+    ? { index: false, follow: false }
+    : { index: true, follow: true },
+  verification: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION
+    ? { google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION }
+    : undefined,
   openGraph: {
     type: "website",
     siteName: siteConfig.name,
