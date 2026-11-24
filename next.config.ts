@@ -5,6 +5,14 @@ const nextConfig: NextConfig = {
   agentRules: false,
   cacheComponents: true,
   partialPrefetching: true,
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "i.ytimg.com",
+      },
+    ],
+  },
   async redirects() {
     const fromHost = process.env.REDIRECT_FROM_HOST?.trim();
     const targetOrigin = process.env.NEXT_PUBLIC_SITE_URL?.trim()?.replace(

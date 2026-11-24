@@ -13,6 +13,7 @@ import {
   MapPin,
   Percent,
   PiggyBank,
+  PlaySquare,
   Receipt,
   Ruler,
   Send,
@@ -52,6 +53,7 @@ const ICONS: Record<ToolIconKey, LucideIcon> = {
   "heart-pulse": HeartPulse,
   code: Code,
   "map-pin": MapPin,
+  "play-square": PlaySquare,
 };
 
 const SIZES = {

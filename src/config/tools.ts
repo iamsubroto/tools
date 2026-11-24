@@ -32,7 +32,8 @@ export type ToolIconKey =
   | "arrow-left-right"
   | "heart-pulse"
   | "code"
-  | "map-pin";
+  | "map-pin"
+  | "play-square";
 
 export interface ToolDefinition {
   slug: string;
@@ -240,6 +241,41 @@ export const TOOLS: ToolDefinition[] = [
     relatedSlugs: [
       "age-calculator",
       "word-character-counter",
+      "percentage-calculator",
+    ],
+  },
+  {
+    slug: "youtube-info-downloader",
+    category: "utilities",
+    phase: 1,
+    status: "live",
+    icon: "play-square",
+    titleEn: "YouTube Info & Thumbnail Downloader",
+    titleBn: "ইউটিউব ইনফো ও থাম্বনেইল ডাউনলোডার",
+    shortDescEn:
+      "Extract HD thumbnails, subtitles/SRT transcripts, title, description, tags, chapters, embed code & public APIs from any YouTube link or ID.",
+    shortDescBn:
+      "যেকোনো ইউটিউব লিংক বা আইডি থেকে এইচডি থাম্বনেইল, সাবটাইটেল/এসআরটি, টাইটেল, বিবরণ, ট্যাগ ও এমবেড কোড বের করুন।",
+    keywords: [
+      "youtube",
+      "youtube thumbnail",
+      "youtube thumbnail downloader",
+      "youtube subtitle",
+      "youtube transcript",
+      "youtube tags",
+      "youtube metadata",
+      "youtube info",
+      "youtube embed",
+      "srt download",
+      "yt thumbnail",
+      "ইউটিউব",
+      "থাম্বনেইল",
+      "সাবটাইটেল",
+      "ট্রান্সক্রিপ্ট",
+    ],
+    relatedSlugs: [
+      "word-character-counter",
+      "bangladesh-postcode",
       "percentage-calculator",
     ],
   },
