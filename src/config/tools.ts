@@ -33,7 +33,8 @@ export type ToolIconKey =
   | "heart-pulse"
   | "code"
   | "map-pin"
-  | "play-square";
+  | "play-square"
+  | "image";
 
 export interface ToolDefinition {
   slug: string;
@@ -277,6 +278,38 @@ export const TOOLS: ToolDefinition[] = [
       "word-character-counter",
       "bangladesh-postcode",
       "percentage-calculator",
+    ],
+  },
+  {
+    slug: "image-to-webp",
+    category: "utilities",
+    phase: 1,
+    status: "live",
+    icon: "image",
+    titleEn: "Image to WebP Converter",
+    titleBn: "ইমেজ টু ওয়েবপি কনভার্টার",
+    shortDescEn:
+      "Convert JPG & PNG images to WebP locally in your browser with batch resize, quality control, transparency support & ZIP download.",
+    shortDescBn:
+      "কোনো আপলোড ছাড়াই ব্রাউজারে JPG ও PNG ছবিকে WebP-তে রূপান্তর, রিসাইজ ও একসাথে ZIP ডাউনলোড করুন।",
+    keywords: [
+      "webp",
+      "image to webp",
+      "jpg to webp",
+      "jpeg to webp",
+      "png to webp",
+      "webp converter",
+      "image converter",
+      "image resize",
+      "image compress",
+      "ইমেজ কনভার্টার",
+      "ওয়েবপি",
+      "ছবি রিসাইজ",
+    ],
+    relatedSlugs: [
+      "youtube-info-downloader",
+      "word-character-counter",
+      "bangladesh-postcode",
     ],
   },
   {

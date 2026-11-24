@@ -8,6 +8,7 @@ import {
   GraduationCap,
   HandCoins,
   HeartPulse,
+  Image as ImageIcon,
   Landmark,
   Languages,
   MapPin,
@@ -54,6 +55,7 @@ const ICONS: Record<ToolIconKey, LucideIcon> = {
   code: Code,
   "map-pin": MapPin,
   "play-square": PlaySquare,
+  image: ImageIcon,
 };
 
 const SIZES = {
