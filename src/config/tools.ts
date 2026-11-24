@@ -31,7 +31,8 @@ export type ToolIconKey =
   | "percent"
   | "arrow-left-right"
   | "heart-pulse"
-  | "code";
+  | "code"
+  | "map-pin";
 
 export interface ToolDefinition {
   slug: string;
@@ -208,6 +209,40 @@ export const TOOLS: ToolDefinition[] = [
     relatedSlugs: ["sanchayapatra-calculator", "bd-income-tax-calculator"],
   },
   // ── Phase 2 ─────────────────────────────────────────────
+  {
+    slug: "bangladesh-postcode",
+    category: "utilities",
+    phase: 1,
+    status: "live",
+    icon: "map-pin",
+    titleEn: "Bangladesh Postcode Finder",
+    titleBn: "বাংলাদেশ পোস্ট কোড খুঁজুন",
+    shortDescEn:
+      "Search all 64 districts, upazilas, post offices and 4-digit postcodes in English & Bangla.",
+    shortDescBn:
+      "৬৪ জেলা, উপজেলা, ডাকঘর ও ৪-অঙ্কের পোস্ট কোড সহজেই খুঁজুন (বাংলা ও ইংরেজি)।",
+    keywords: [
+      "postcode",
+      "postal code",
+      "zip code",
+      "post office",
+      "bdpost",
+      "bangladesh postcode",
+      "zila",
+      "upazila",
+      "thana",
+      "dhaka postcode",
+      "পোস্ট কোড",
+      "ডাকঘর",
+      "জেলা",
+      "উপজেলা",
+    ],
+    relatedSlugs: [
+      "age-calculator",
+      "word-character-counter",
+      "percentage-calculator",
+    ],
+  },
   {
     slug: "electricity-bill-calculator-bd",
     category: "utilities",

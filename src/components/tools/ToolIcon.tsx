@@ -10,6 +10,7 @@ import {
   HeartPulse,
   Landmark,
   Languages,
+  MapPin,
   Percent,
   PiggyBank,
   Receipt,
@@ -50,6 +51,7 @@ const ICONS: Record<ToolIconKey, LucideIcon> = {
   "arrow-left-right": ArrowLeftRight,
   "heart-pulse": HeartPulse,
   code: Code,
+  "map-pin": MapPin,
 };
 
 const SIZES = {

@@ -85,7 +85,7 @@ export function WordCounterClient() {
             "Start typing or paste an article, assignment, Facebook post, or SMS message…",
             "এখানে প্রবন্ধ, অ্যাসাইনমেন্ট, ফেসবুক পোস্ট বা এসএমএস লিখুন অথবা পেস্ট করুন…"
           )}
-          className="mt-3 w-full resize-y rounded-xl border border-slate-300 bg-slate-50/50 p-4 text-[15px] leading-relaxed text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-emerald-500/15 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+          className="mt-3 w-full resize-y rounded-xl border border-slate-300 bg-slate-50/50 p-4 text-[15px] leading-relaxed text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-emerald-500/15 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:placeholder:text-slate-500 dark:focus:border-emerald-400 dark:focus:bg-slate-950"
         />
 
         <div className="mt-4 flex flex-wrap items-center gap-2 print:hidden">
