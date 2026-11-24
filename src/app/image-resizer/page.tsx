@@ -205,7 +205,7 @@ export default function ImageResizerPage() {
               <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl lg:text-4xl dark:text-white">
                 Reduce Image Size{" "}
                 <span className="font-semibold text-slate-400 dark:text-slate-500">
-                  — Image Resizer
+                  — Image Resizer (Nijhum)
                 </span>
               </h1>
               <p className="mt-1 font-bangla text-[15px] text-slate-500 dark:text-slate-400">
