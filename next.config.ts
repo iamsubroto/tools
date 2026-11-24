@@ -14,6 +14,19 @@ const nextConfig: NextConfig = {
     ],
   },
   async redirects() {
+    const rules = [
+      {
+        source: "/reduce-image-size",
+        destination: "/image-resizer",
+        permanent: true,
+      },
+      {
+        source: "/reduce-images-size",
+        destination: "/image-resizer",
+        permanent: true,
+      },
+    ];
+
     const fromHost = process.env.REDIRECT_FROM_HOST?.trim();
     const targetOrigin = process.env.NEXT_PUBLIC_SITE_URL?.trim()?.replace(
       /\/+$/,
@@ -21,10 +34,11 @@ const nextConfig: NextConfig = {
     );
 
     if (!fromHost || !targetOrigin) {
-      return [];
+      return rules;
     }
 
     return [
+      ...rules,
       {
         source: "/:path*",
         has: [{ type: "host", value: fromHost }],

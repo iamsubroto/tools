@@ -34,7 +34,8 @@ export type ToolIconKey =
   | "code"
   | "map-pin"
   | "play-square"
-  | "image";
+  | "image"
+  | "maximize-2";
 
 export interface ToolDefinition {
   slug: string;
@@ -307,9 +308,47 @@ export const TOOLS: ToolDefinition[] = [
       "ছবি রিসাইজ",
     ],
     relatedSlugs: [
+      "image-resizer",
       "youtube-info-downloader",
       "word-character-counter",
-      "bangladesh-postcode",
+    ],
+  },
+  {
+    slug: "image-resizer",
+    category: "utilities",
+    phase: 1,
+    status: "live",
+    icon: "maximize-2",
+    titleEn: "Reduce Image Size",
+    titleBn: "ছবির সাইজ কমান (ইমেজ রিসাইজার)",
+    shortDescEn:
+      "Reduce image size & resize JPG, PNG, and WebP locally while keeping the same format—custom px, smart crop, presets & ZIP.",
+    shortDescBn:
+      "ফাইল ফরম্যাট অপরিবর্তিত রেখে ব্রাউজারেই JPG, PNG ও WebP ছবির সাইজ কমান ও রিসাইজ করুন—পিক্সেল, শতাংশ, প্রিসেট ও ZIP।",
+    keywords: [
+      "reduce image size",
+      "reduce images size",
+      "reduce photo size",
+      "shrink image",
+      "image compressor",
+      "image resizer",
+      "resize image",
+      "photo resizer",
+      "jpg resizer",
+      "png resizer",
+      "webp resizer",
+      "bulk image resize",
+      "300x300 photo",
+      "teletalk photo resize",
+      "ছবির সাইজ কমান",
+      "ইমেজ রিসাইজ",
+      "ছবি রিসাইজ",
+      "ফটো রিসাইজার",
+    ],
+    relatedSlugs: [
+      "image-to-webp",
+      "youtube-info-downloader",
+      "word-character-counter",
     ],
   },
   {

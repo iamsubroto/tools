@@ -12,6 +12,7 @@ import {
   Landmark,
   Languages,
   MapPin,
+  Maximize2,
   Percent,
   PiggyBank,
   PlaySquare,
@@ -56,6 +57,7 @@ const ICONS: Record<ToolIconKey, LucideIcon> = {
   "map-pin": MapPin,
   "play-square": PlaySquare,
   image: ImageIcon,
+  "maximize-2": Maximize2,
 };
 
 const SIZES = {
